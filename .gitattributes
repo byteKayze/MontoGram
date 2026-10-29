@@ -1,0 +1,4 @@
+# Preserve exact reviewed source bytes, including upstream line endings.
+* -text
+*.png binary
+*.jpg binary

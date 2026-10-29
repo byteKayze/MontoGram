@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Immutable local Android identity, outside binary translation inputs. -->
+    <string name="MontogramName" translatable="false">Montogram</string>
+</resources>

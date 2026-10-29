@@ -1,0 +1,4 @@
+# Copy to ignored montogram.properties; use your own https://my.telegram.org app.
+# This template contains no working credentials. Never commit the local file.
+api.id=YOUR_API_ID
+api.hash=YOUR_API_HASH

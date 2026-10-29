@@ -1,0 +1,49 @@
+#!/bin/sh
+# Audited local launcher; upstream gradlew remains intact for source provenance.
+set -eu
+# Child-only isolation: inherited JVM flags must not override the resource profile.
+unset GRADLE_OPTS JAVA_OPTS JAVA_TOOL_OPTIONS _JAVA_OPTIONS JDK_JAVA_OPTIONS
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+setup_dir="$project_dir/setup"
+export JAVA_HOME="${MONTOGRAM_JAVA_HOME:-$setup_dir/toolchains/jdk-17.0.21+9}"
+export ANDROID_HOME="$setup_dir/android-sdk"
+export ANDROID_USER_HOME="$setup_dir/android-fork-user"
+export GRADLE_USER_HOME="$setup_dir/gradle-fork-home"
+export CMAKE_BUILD_PARALLEL_LEVEL=1
+heap_mib=2560
+heap_option_seen=0
+no_daemon_seen=0
+for option in "$@"; do
+  case "$option" in
+    --no-daemon) no_daemon_seen=$((no_daemon_seen + 1)) ;;
+    --daemon|--foreground)
+      printf '%s\n' 'Montogram builds require the client JVM; daemon mode is refused' >&2
+      exit 2 ;;
+    -Dorg.gradle.jvmargs*|org.gradle.jvmargs|org.gradle.jvmargs=*|--system-prop|--system-prop=*)
+      printf '%s\n' 'Use the allowlisted Montogram heap option; raw JVM overrides are refused' >&2
+      exit 2
+      ;;
+    -PmontogramHeapMiB=*)
+      if [ "$heap_option_seen" -ne 0 ]; then
+        printf '%s\n' 'Duplicate Montogram heap option; refusing ambiguous profile' >&2
+        exit 2
+      fi
+      heap_mib=${option#-PmontogramHeapMiB=}
+      heap_option_seen=1
+      ;;
+  esac
+done
+if [ "$no_daemon_seen" -ne 1 ]; then
+  printf '%s\n' 'Pass exactly one --no-daemon for the verified client JVM profile' >&2
+  exit 2
+fi
+case "$heap_mib" in
+  384|512|768|1024|1536|2048|2560) ;;
+  *) printf '%s\n' 'Unsupported Montogram heap profile' >&2; exit 2 ;;
+esac
+export JAVA_OPTS="-Xms64m -Xmx${heap_mib}m -XX:MaxMetaspaceSize=512m -XX:+UseSerialGC -Dfile.encoding=UTF-8"
+exec "$setup_dir/toolchains/gradle-8.13/bin/gradle" \
+  "-Dorg.gradle.jvmargs=$JAVA_OPTS" \
+  -Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=1 \
+  -Pkotlin.compiler.execution.strategy=in-process -Pkotlin.incremental=false \
+  --init-script "$setup_dir/telegram-fork-lowram.init.gradle" "$@"

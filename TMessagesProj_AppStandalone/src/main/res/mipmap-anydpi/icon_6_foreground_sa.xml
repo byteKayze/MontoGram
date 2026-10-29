@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Own M, fitted within the adaptive-icon safe zone; stock backgrounds retained. -->
+    <group android:scaleX="0.85" android:scaleY="0.85" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#FFFFFF" android:pathData="M24,75L24,33L36,33L54,56L72,33L84,33L84,75L71,75L71,53L54,74L37,53L37,75Z" />
+    </group>
+</vector>

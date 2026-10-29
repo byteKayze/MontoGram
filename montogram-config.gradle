@@ -1,0 +1,43 @@
+// Montogram local identity. No official sample API/signing identity fallback.
+import java.nio.file.Files
+import java.nio.file.LinkOption
+
+def requiredUid = new com.sun.security.auth.module.UnixSystem().uid
+def requirePrivate = { File input, int mode, boolean directory ->
+    def path = input.toPath()
+    boolean typeMatches = directory ? Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS) :
+        Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)
+    if (!typeMatches || Files.getAttribute(path, 'unix:uid', LinkOption.NOFOLLOW_LINKS) != requiredUid ||
+        (((int) Files.getAttribute(path, 'unix:mode', LinkOption.NOFOLLOW_LINKS)) & 0777) != mode) {
+        throw new GradleException('Unsafe Montogram private file ownership/permissions; values withheld')
+    }
+    for (def parent = path.parent; parent != null; parent = parent.parent) {
+        if (Files.isSymbolicLink(parent)) throw new GradleException('Aliased Montogram private directory')
+    }
+}
+def identity = rootProject.file('montogram.properties')
+requirePrivate(identity, 0600, false)
+if (!Files.isRegularFile(identity.toPath(), LinkOption.NOFOLLOW_LINKS) || identity.length() > 1024) {
+    throw new GradleException('Missing Montogram local API configuration; see MONTOGRAM_BUILD.md')
+}
+def values = new Properties()
+identity.withInputStream { values.load(it) }
+def apiId = values.getProperty('api.id', '')
+def apiHash = values.getProperty('api.hash', '')
+if (!(apiId ==~ /[1-9][0-9]{0,9}/) || apiId.toLong() > Integer.MAX_VALUE || !(apiHash ==~ /[a-fA-F0-9]{32}/)) {
+    throw new GradleException('Invalid Montogram API configuration; values withheld')
+}
+ext.montogramApiId = apiId
+ext.montogramApiHash = apiHash
+ext.montogramKeyFile = rootProject.file('.montogram-private/montogram.p12')
+def passwordFile = rootProject.file('.montogram-private/signing.password')
+requirePrivate(rootProject.file('.montogram-private'), 0700, true)
+requirePrivate(montogramKeyFile, 0600, false)
+requirePrivate(passwordFile, 0600, false)
+if (![montogramKeyFile, passwordFile].every { Files.isRegularFile(it.toPath(), LinkOption.NOFOLLOW_LINKS) }) {
+    throw new GradleException('Missing dedicated Montogram signing identity; no sample key fallback')
+}
+ext.montogramKeyPassword = passwordFile.getText('UTF-8').trim()
+if (!(montogramKeyPassword ==~ /[a-zA-Z0-9_-]{32,128}/)) {
+    throw new GradleException('Invalid Montogram signing password; values withheld')
+}

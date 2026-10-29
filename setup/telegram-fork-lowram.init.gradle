@@ -1,0 +1,28 @@
+// Explicit, reproducible low-RAM profile. No credentials, extra repositories,
+// runtime/UI edits, or changes to upstream LTO/optimization settings.
+def selectedAbi = gradle.startParameter.projectProperties.get('montogramAbi') ?: 'x86_64'
+if (!(selectedAbi in ['x86_64', 'arm64-v8a', 'universal'])) throw new GradleException('Unsupported test ABI')
+def selectedAbis = selectedAbi == 'universal' ? ['arm64-v8a', 'x86_64'] : [selectedAbi]
+gradle.beforeProject { p ->
+    ['com.android.application', 'com.android.library'].each { pluginId ->
+        p.plugins.withId(pluginId) {
+            p.extensions.getByName('androidComponents').finalizeDsl { android ->
+                android.defaultConfig.ndk.abiFilters.clear()
+                android.defaultConfig.ndk.abiFilters.addAll(selectedAbis)
+                android.productFlavors.all { flavor ->
+                    flavor.ndk.abiFilters.clear()
+                    flavor.ndk.abiFilters.addAll(selectedAbis)
+                }
+                if (p.name == 'TMessagesProj') {
+                    android.defaultConfig.externalNativeBuild.cmake.arguments.addAll([
+                        '-DCMAKE_JOB_POOLS=montogram_compile=1;montogram_link=1',
+                        '-DCMAKE_JOB_POOL_COMPILE=montogram_compile',
+                        '-DCMAKE_JOB_POOL_LINK=montogram_link',
+                        '-DCMAKE_ASM_NASM_COMPILER=' + new File(p.rootDir, 'setup/android-sdk/ndk/27.2.12479018/prebuilt/linux-x86_64/bin/yasm').canonicalPath,
+                        '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--threads=1 -Wl,--lto-partitions=1'
+                    ])
+                }
+            }
+        }
+    }
+}

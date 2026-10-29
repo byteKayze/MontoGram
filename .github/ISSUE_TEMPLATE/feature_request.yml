@@ -1,0 +1,19 @@
+name: Предложение
+description: Самостоятельный полезный сценарий
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую задачу решает функция
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Точка входа и ожидаемое поведение
+    validations:
+      required: true
+  - type: textarea
+    id: existing
+    attributes:
+      label: Чем отличается от существующих функций
