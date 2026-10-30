@@ -1,5 +1,14 @@
 # Изменения
 
+## 0.2.0-alpha.7 — build20078
+
+Три новые функции относительно alpha.6: opt-in Reader одного разрешённого обычного сообщения; Unicode simple-case поиск с prev/next и лимитами; временное копирование с opaque per-copy token и проверкой неизменённого содержимого перед best-effort очисткой. Создание копии требует foreground, cleanup собственной копии пытается работать и после потери фокуса/смены аккаунта. Неудачная замена сохраняет старый callback очистки. No services/listeners/worker threads. Android не даёт гарантий удаления истории буфера.
+
+Reader выключен по умолчанию. Secret/TTL/protected/paid/group/spoiler/unknownpeer исключены. Текст/query не сохраняются; pause/focus/account notifications отзывают просмотр. Документация и проверки: [READER_REVIEW.md](docs/montogram/READER_REVIEW.md).
+
+Всего39 реализаций скомпилировано в APK,5частично,21планируется. Это не Android-приёмка: DEVICE0. Полные60+/MD3, реальный clipboard/SAF/lifecycle и локальная воспроизводимость не подтверждены. Подпись/hash/source/24-file manifest и GitHub/Drive readback отмечаются отдельно.
+
+
 ## 0.2.0-alpha.6 — build20068
 
 11 самостоятельных новых функций относительно alpha.5:
