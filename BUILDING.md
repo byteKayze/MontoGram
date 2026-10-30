@@ -41,6 +41,13 @@ Build использует compact Gradle wrapper с точным маскиро
 проверка зависимостей. Universal здесь означает arm64-v8a и x86_64; ARM32 нет.
 Это unminified alpha, без обещания оптимального размера.
 
+Перед native assembly CI разрешает реальные внешние артефакты четырёх production
+classpath и запускает обычные JavaCompile задачи core/app. Только Java preflight
+получает `-PmontogramHeapMiB=8192`, metaspace1024MiB и native jobs1. Assemble
+сохраняет heap2560MiB/native jobs4 и использует штатные Gradle up-to-date checks.
+Локальный профиль остаётся heap2560MiB/native jobs1; 8192 разрешён только явно
+в GitHub Actions репозитория byteKayze/MontoGram. Никакие outputs не копируются.
+
 ## Ограничения и проверка
 
 На ноутбуке4ГБ полная новая сборка была остановлена защитой ресурсов. Повторять
