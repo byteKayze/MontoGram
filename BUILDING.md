@@ -53,12 +53,12 @@ GitHub Actions репозитория byteKayze/MontoGram; desktop profile не 
 ## Ограничения и проверка
 
 На ноутбуке с 4 ГБ RAM прежние полные сборки останавливала защита ресурсов.
-Текущая alpha.5, build 20058, собрана в GitHub Actions и подписана локально;
-её точный исходный commit — `e8193b041494bc1dd060ff336e04c912d01600aa`,
-тег — `v0.2.0-alpha.5`. Последующие изменения README/CHANGELOG не меняют
+Текущая alpha.6, build 20068, собрана в GitHub Actions и подписана локально;
+её точный исходный commit — `678040e7a8a2f78cdc12d9f53d7c5f2d29c9d55a`,
+тег — `v0.2.0-alpha.6`. Последующие изменения README/CHANGELOG не меняют
 этот тег и не требуют пересборки приложения.
 
-В APK указана версия `0.2.0-alpha.5-internal-unminified`. Проверены package/version,
+В APK указана версия `0.2.0-alpha.6-internal-unminified`. Проверены package/version,
 подпись, отсутствие debug-режима, ZIP/ELF alignment, ABI и связь с исходным commit.
 Успех CI, целевые проверки и Android runtime отмечаются отдельно: запуск этой
 APK на устройстве и локальная воспроизводимость ещё не подтверждены. Полные
