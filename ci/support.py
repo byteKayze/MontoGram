@@ -72,7 +72,7 @@ def workflow_id():
 def metadata():
     require(os.environ.get('MONTOGRAM_GRADLE_OUTCOME')=='success','Gradle build success required')
     dependencies=json.loads((ROOT/'build/montogram-runtime-dependencies.json').read_text())
-    require(dependencies=={'afatStandaloneRuntimeClasspath':['33.7.2-android'],'afatStandaloneCompileClasspath':['33.7.2-android']},'Fixed production dependency proof required')
+    require(dependencies=={'afatStandaloneRuntimeClasspath':['33.7.2-android'],'afatStandaloneCompileClasspath':['33.7.2-android'],'standaloneRuntimeClasspath':['33.7.2-android'],'standaloneCompileClasspath':['33.7.2-android']},'Fixed production dependency proof required')
     commit=run(['git','-C',ROOT,'rev-parse','HEAD']).strip()
     require(commit==os.environ['GITHUB_SHA'],'Checkout/dispatch source mismatch')
     apk=ROOT/'TMessagesProj_AppStandalone/build/outputs/apk/afat/standalone/app-internal-unminified.apk'

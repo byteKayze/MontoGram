@@ -6435,5 +6435,13 @@
             <sha256 value="070d75f261fe4c5b8202508366715f7f2d4660f88c8ef7e6d3575e48c9683b66" origin="Reviewed Guava security update; Maven Central"/>
          </artifact>
       </component>
+      <component group="org.checkerframework" name="checker-qual" version="2.5.2">
+         <artifact name="checker-qual-2.5.2.pom">
+            <sha256 value="dc4cd438a36462d013c2338c8e206d102a322a00f33729e8955ee219859c9ede" origin="Reviewed exact failed Checker Framework coordinate; Maven Central"/>
+         </artifact>
+         <artifact name="checker-qual-2.5.2.jar">
+            <sha256 value="64b02691c8b9d4e7700f8ee2e742dce7ea2c6e81e662b7522c9ee3bf568c040a" origin="Reviewed exact failed Checker Framework coordinate; Maven Central"/>
+         </artifact>
+      </component>
    </components>
 </verification-metadata>

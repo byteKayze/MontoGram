@@ -183,8 +183,20 @@ tasks.register('verifyMontogramRuntimeDependencies') {
     group = 'verification'
     doLast {
         def resolved = [:]
-        ['afatStandaloneRuntimeClasspath', 'afatStandaloneCompileClasspath'].each { name ->
-            def versions = configurations.getByName(name).incoming.resolutionResult.allComponents.collect { component ->
+        [
+            [project, 'afatStandaloneRuntimeClasspath'],
+            [project, 'afatStandaloneCompileClasspath'],
+            [project(':TMessagesProj'), 'standaloneRuntimeClasspath'],
+            [project(':TMessagesProj'), 'standaloneCompileClasspath']
+        ].each { target ->
+            def owner = target[0]
+            def name = target[1]
+            def configuration = owner.configurations.getByName(name)
+            // Resolve real external artifacts now: graph metadata alone misses JAR/AAR verification.
+            configuration.incoming.artifactView {
+                componentFilter { id -> id instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier }
+            }.files.files
+            def versions = configuration.incoming.resolutionResult.allComponents.collect { component ->
                 def id = component.id
                 id instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier &&
                         id.group == 'com.google.guava' && id.module == 'guava' ? id.version : null
