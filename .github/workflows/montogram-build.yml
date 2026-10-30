@@ -74,6 +74,14 @@
           "run": "python3 ci/support.py workflow-id"
         },
         {
+          "name": "Verify resolved production dependencies",
+          "id": "dependencies",
+          "run": "python3 ci/vendor/gradle_run.py --root \"/tmp/montogram-gradle\" run --workflow \"${{ steps.managed.outputs.workflow }}\" --scope targeted --question \"Does the resolved production graph use the fixed Android Guava version?\" -- ./gradlew-montogram :TMessagesProj_AppStandalone:verifyMontogramRuntimeDependencies -PmontogramAbi=universal -PmontogramMinify=false -PmontogramHeapMiB=2560 --configure-on-demand --max-workers=1 --no-parallel --no-daemon --dependency-verification strict",
+          "env": {
+            "MONTOGRAM_JAVA_HOME": "${{ env.JAVA_HOME }}"
+          }
+        },
+        {
           "name": "Compile and package canonical APK",
           "id": "build",
           "run": "python3 ci/vendor/gradle_run.py --root \"/tmp/montogram-gradle\" run --workflow \"${{ steps.managed.outputs.workflow }}\" --scope targeted --question \"Does this reviewed source compile and package the alpha5 universal64 APK?\" -- ./gradlew-montogram :TMessagesProj_AppStandalone:assembleAfatStandalone -PmontogramAbi=universal -PmontogramMinify=false -PmontogramHeapMiB=2560 --configure-on-demand --max-workers=1 --no-parallel --no-daemon --dependency-verification strict",
@@ -113,7 +121,8 @@
         }
       ],
       "env": {
-        "TMPDIR": "/tmp"
+        "TMPDIR": "/tmp",
+        "MONTOGRAM_NATIVE_JOBS": "4"
       }
     }
   }

@@ -71,6 +71,8 @@ def workflow_id():
 
 def metadata():
     require(os.environ.get('MONTOGRAM_GRADLE_OUTCOME')=='success','Gradle build success required')
+    dependencies=json.loads((ROOT/'build/montogram-runtime-dependencies.json').read_text())
+    require(dependencies=={'afatStandaloneRuntimeClasspath':['33.7.2-android'],'afatStandaloneCompileClasspath':['33.7.2-android']},'Fixed production dependency proof required')
     commit=run(['git','-C',ROOT,'rev-parse','HEAD']).strip()
     require(commit==os.environ['GITHUB_SHA'],'Checkout/dispatch source mismatch')
     apk=ROOT/'TMessagesProj_AppStandalone/build/outputs/apk/afat/standalone/app-internal-unminified.apk'
@@ -93,7 +95,7 @@ def metadata():
            'bytes':target.stat().st_size,'repository':'byteKayze/MontoGram','commit':commit,'run_id':os.environ['GITHUB_RUN_ID'],
            'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'version_code':20058,'abis':sorted(abis),'gradle':'8.13',
            'java_version':re.search(r'JAVA_VERSION="([^"]+)"',(Path(os.environ['JAVA_HOME'])/'release').read_text()).group(1),
-           'runtime_android_tested':False,'owner_signing_key_uploaded':False}
+           'runtime_android_tested':False,'owner_signing_key_uploaded':False,'native_compile_jobs':int(os.environ.get('MONTOGRAM_NATIVE_JOBS','1')),'runtime_dependency_versions':dependencies}
     (output/'ci-metadata.json').write_text(json.dumps(value,indent=2)+'\n')
     print('Bounded CI handoff ready: ephemeral APK plus metadata only')
 

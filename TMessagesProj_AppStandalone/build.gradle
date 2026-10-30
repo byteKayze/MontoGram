@@ -25,6 +25,8 @@ configurations.all {
 
 dependencies {
     implementation project(':TMessagesProj')
+    // CVE-2026-102554: patched Android runtime, no global tooling override.
+    implementation 'com.google.guava:guava:33.7.2-android'
     implementation 'androidx.fragment:fragment:1.8.9'
     implementation 'androidx.core:core:1.16.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
@@ -175,3 +177,26 @@ android {
 }
 
 // No Google project configuration in the Montogram standalone variant.
+
+// Fail closed on the actual production graph, not only a source declaration.
+tasks.register('verifyMontogramRuntimeDependencies') {
+    group = 'verification'
+    doLast {
+        def resolved = [:]
+        ['afatStandaloneRuntimeClasspath', 'afatStandaloneCompileClasspath'].each { name ->
+            def versions = configurations.getByName(name).incoming.resolutionResult.allComponents.collect { component ->
+                def id = component.id
+                id instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier &&
+                        id.group == 'com.google.guava' && id.module == 'guava' ? id.version : null
+            }.findAll { it != null }.unique().sort()
+            if (versions != ['33.7.2-android']) {
+                throw new GradleException('Unexpected production Guava version in ' + name + ': ' + versions)
+            }
+            resolved[name] = versions
+        }
+        def report = rootProject.layout.buildDirectory.file('montogram-runtime-dependencies.json').get().asFile
+        report.parentFile.mkdirs()
+        report.text = groovy.json.JsonOutput.toJson(resolved) + '\n'
+        println('MONTOGRAM_RUNTIME_DEPENDENCIES ' + groovy.json.JsonOutput.toJson(resolved))
+    }
+}

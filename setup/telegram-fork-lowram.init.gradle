@@ -1,3 +1,6 @@
+def nativeJobs = System.getenv('MONTOGRAM_NATIVE_JOBS') ?: '1'
+if (!(nativeJobs in ['1', '4'])) throw new GradleException('Unsupported native job profile')
+if (nativeJobs == '4' && !(System.getenv('GITHUB_ACTIONS') == 'true' && System.getenv('GITHUB_REPOSITORY') == 'byteKayze/MontoGram')) throw new GradleException('Parallel native profile requires Montogram CI')
 // Explicit, reproducible low-RAM profile. No credentials, extra repositories,
 // runtime/UI edits, or changes to upstream LTO/optimization settings.
 def selectedAbi = gradle.startParameter.projectProperties.get('montogramAbi') ?: 'x86_64'
@@ -15,7 +18,7 @@ gradle.beforeProject { p ->
                 }
                 if (p.name == 'TMessagesProj') {
                     android.defaultConfig.externalNativeBuild.cmake.arguments.addAll([
-                        '-DCMAKE_JOB_POOLS=montogram_compile=1;montogram_link=1',
+                        '-DCMAKE_JOB_POOLS=montogram_compile=' + nativeJobs + ';montogram_link=1',
                         '-DCMAKE_JOB_POOL_COMPILE=montogram_compile',
                         '-DCMAKE_JOB_POOL_LINK=montogram_link',
                         '-DCMAKE_ASM_NASM_COMPILER=' + new File(p.rootDir, 'setup/android-sdk/ndk/27.2.12479018/prebuilt/linux-x86_64/bin/yasm').canonicalPath,

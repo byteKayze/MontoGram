@@ -11,7 +11,18 @@ export JAVA_HOME="${MONTOGRAM_JAVA_HOME:-$setup_dir/toolchains/jdk-17.0.21+9}"
 export ANDROID_HOME="$setup_dir/android-sdk"
 export ANDROID_USER_HOME="$setup_dir/android-fork-user"
 export GRADLE_USER_HOME="$setup_dir/gradle-fork-home"
-export CMAKE_BUILD_PARALLEL_LEVEL=1
+native_jobs=${MONTOGRAM_NATIVE_JOBS:-1}
+case "$native_jobs" in
+  1) ;;
+  4)
+    if [ "${GITHUB_ACTIONS:-false}" != true ] || [ "${GITHUB_REPOSITORY:-}" != byteKayze/MontoGram ]; then
+      printf '%s\n' 'Four native jobs require the explicit Montogram GitHub CI profile' >&2
+      exit 2
+    fi ;;
+  *) printf '%s\n' 'Unsupported native job profile' >&2; exit 2 ;;
+esac
+export MONTOGRAM_NATIVE_JOBS="$native_jobs"
+export CMAKE_BUILD_PARALLEL_LEVEL="$native_jobs"
 heap_mib=2560
 heap_option_seen=0
 no_daemon_seen=0
