@@ -46,7 +46,7 @@ if (montogramCompilerCI) {
         }
     }
 }
-gradle.projectsEvaluated {
+gradle.rootProject {
     if (gradle.parent != null) return
     if (!(System.getenv('GITHUB_ACTIONS') == 'true' && System.getenv('GITHUB_REPOSITORY') == 'byteKayze/MontoGram')) return
     def targets = [
