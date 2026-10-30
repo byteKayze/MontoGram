@@ -3,6 +3,8 @@
 set -eu
 # Child-only isolation: inherited JVM flags must not override the resource profile.
 unset GRADLE_OPTS JAVA_OPTS JAVA_TOOL_OPTIONS _JAVA_OPTIONS JDK_JAVA_OPTIONS
+# Child-only SDK isolation: hosted runners may export a different SDK root.
+unset ANDROID_SDK_ROOT ANDROID_SDK_HOME
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 setup_dir="$project_dir/setup"
 export JAVA_HOME="${MONTOGRAM_JAVA_HOME:-$setup_dir/toolchains/jdk-17.0.21+9}"
