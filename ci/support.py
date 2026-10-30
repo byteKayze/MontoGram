@@ -69,6 +69,18 @@ def workflow_id():
     require(len(children)==1,'Ambiguous managed Gradle workflow')
     with Path(os.environ['GITHUB_OUTPUT']).open('a') as stream:stream.write('workflow='+children[0].name+'\n')
 
+def compiler_profile():
+    path=ROOT/'build/montogram-compiler-profile.json'
+    require(path.is_file() and not path.is_symlink() and path.stat().st_size<=16384,'Missing bounded compiler profile')
+    profile=json.loads(path.read_text())
+    require(set(profile)=={'scope','gradle_runtime_max_heap_mib','compiler_profiles'},'Unexpected compiler profile fields')
+    require(profile['scope']=='Configured compiler options; not worker RSS or runtime JVM flag measurement','Unexpected profile scope')
+    require(isinstance(profile['gradle_runtime_max_heap_mib'],int) and 2000<=profile['gradle_runtime_max_heap_mib']<=2560,'Unexpected actual Gradle heap')
+    args=['-XX:+UseSerialGC','-XX:MaxMetaspaceSize=512m','-Dfile.encoding=UTF-8']
+    expected=[{'task':task,'fork':True,'heap_mib':4096,'jvm_args':args} for task in (':TMessagesProj:compileStandaloneJavaWithJavac',':TMessagesProj_AppStandalone:compileAfatStandaloneJavaWithJavac')]
+    require(profile['compiler_profiles']==expected,'Unexpected compiler process configuration')
+    print(json.dumps(profile))
+
 def metadata():
     require(os.environ.get('MONTOGRAM_GRADLE_OUTCOME')=='success','Gradle build success required')
     dependencies=json.loads((ROOT/'build/montogram-runtime-dependencies.json').read_text())
@@ -100,5 +112,5 @@ def metadata():
     print('Bounded CI handoff ready: ephemeral APK plus metadata only')
 
 if __name__=='__main__':
-    require(len(sys.argv)==2 and sys.argv[1] in ('bootstrap','provision','workflow-id','metadata'),'Expected one CI operation')
-    {'bootstrap':bootstrap,'provision':provision,'workflow-id':workflow_id,'metadata':metadata}[sys.argv[1]]()
+    require(len(sys.argv)==2 and sys.argv[1] in ('bootstrap','provision','workflow-id','compiler-profile','metadata'),'Expected one CI operation')
+    {'bootstrap':bootstrap,'provision':provision,'workflow-id':workflow_id,'compiler-profile':compiler_profile,'metadata':metadata}[sys.argv[1]]()

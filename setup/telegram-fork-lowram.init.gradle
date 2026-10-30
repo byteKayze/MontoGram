@@ -29,3 +29,48 @@ gradle.beforeProject { p ->
         }
     }
 }
+
+// CI isolates the actual compiler heap; desktop resource settings stay unchanged.
+def montogramCompilerCI = System.getenv('GITHUB_ACTIONS') == 'true' && System.getenv('GITHUB_REPOSITORY') == 'byteKayze/MontoGram'
+if (montogramCompilerCI) {
+    gradle.beforeProject { p ->
+        def selectedTask = [':TMessagesProj':'compileStandaloneJavaWithJavac', ':TMessagesProj_AppStandalone':'compileAfatStandaloneJavaWithJavac'][p.path]
+        if (selectedTask != null) {
+            p.tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach { task ->
+                if (task.name == selectedTask) {
+                    task.options.fork = true
+                    task.options.forkOptions.memoryMaximumSize = '4096m'
+                    task.options.forkOptions.jvmArgs = ['-XX:+UseSerialGC', '-XX:MaxMetaspaceSize=512m', '-Dfile.encoding=UTF-8']
+                }
+            }
+        }
+    }
+}
+gradle.projectsEvaluated {
+    if (gradle.parent != null) return
+    if (!(System.getenv('GITHUB_ACTIONS') == 'true' && System.getenv('GITHUB_REPOSITORY') == 'byteKayze/MontoGram')) return
+    def targets = [
+        [':TMessagesProj', 'compileStandaloneJavaWithJavac'],
+        [':TMessagesProj_AppStandalone', 'compileAfatStandaloneJavaWithJavac']
+    ]
+    def compilerArgs = ['-XX:+UseSerialGC', '-XX:MaxMetaspaceSize=512m', '-Dfile.encoding=UTF-8']
+    gradle.rootProject.tasks.register('verifyMontogramCompilerProfile') {
+        group = 'verification'
+        doLast {
+            def profiles = targets.collect { target ->
+                def task = gradle.rootProject.project(target[0]).tasks.named(target[1]).get()
+                if (!task.options.fork || task.options.forkOptions.memoryMaximumSize != '4096m' || task.options.forkOptions.jvmArgs != compilerArgs) {
+                    throw new GradleException('Unexpected isolated Java compiler configuration')
+                }
+                [task:task.path, fork:true, heap_mib:4096, jvm_args:compilerArgs]
+            }
+            def report = gradle.rootProject.layout.buildDirectory.file('montogram-compiler-profile.json').get().asFile
+            report.parentFile.mkdirs()
+            report.text = groovy.json.JsonOutput.toJson([
+                scope:'Configured compiler options; not worker RSS or runtime JVM flag measurement',
+                gradle_runtime_max_heap_mib:(Runtime.runtime.maxMemory() / 1024 / 1024) as int,
+                compiler_profiles:profiles
+            ]) + '\n'
+        }
+    }
+}

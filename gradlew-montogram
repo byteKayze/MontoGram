@@ -50,19 +50,11 @@ if [ "$no_daemon_seen" -ne 1 ]; then
   printf '%s\n' 'Pass exactly one --no-daemon for the verified client JVM profile' >&2
   exit 2
 fi
-metaspace_mib=512
 case "$heap_mib" in
-  8192)
-    if [ "${GITHUB_ACTIONS:-false}" != true ] || [ "${GITHUB_REPOSITORY:-}" != byteKayze/MontoGram ]; then
-      printf '%s\n' 'Eight GiB heap requires the explicit Montogram GitHub CI profile' >&2
-      exit 2
-    fi
-    metaspace_mib=1024
-    ;;
   384|512|768|1024|1536|2048|2560) ;;
   *) printf '%s\n' 'Unsupported Montogram heap profile' >&2; exit 2 ;;
 esac
-export JAVA_OPTS="-Xms64m -Xmx${heap_mib}m -XX:MaxMetaspaceSize=${metaspace_mib}m -XX:+UseSerialGC -Dfile.encoding=UTF-8"
+export JAVA_OPTS="-Xms64m -Xmx${heap_mib}m -XX:MaxMetaspaceSize=512m -XX:+UseSerialGC -Dfile.encoding=UTF-8"
 exec "$setup_dir/toolchains/gradle-8.13/bin/gradle" \
   "-Dorg.gradle.jvmargs=$JAVA_OPTS" \
   -Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=1 \

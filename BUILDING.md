@@ -41,12 +41,14 @@ Build использует compact Gradle wrapper с точным маскиро
 проверка зависимостей. Universal здесь означает arm64-v8a и x86_64; ARM32 нет.
 Это unminified alpha, без обещания оптимального размера.
 
-Перед native assembly CI разрешает реальные внешние артефакты четырёх production
-classpath и запускает обычные JavaCompile задачи core/app. Только Java preflight
-получает `-PmontogramHeapMiB=8192`, metaspace1024MiB и native jobs1. Assemble
-сохраняет heap2560MiB/native jobs4 и использует штатные Gradle up-to-date checks.
-Локальный профиль остаётся heap2560MiB/native jobs1; 8192 разрешён только явно
-в GitHub Actions репозитория byteKayze/MontoGram. Никакие outputs не копируются.
+Перед native assembly CI проверяет реальные артефакты четырёх production classpath.
+Для двух обычных JavaCompile задач core/app отдельно настроены fork=true,
+compiler heap4096MiB, SerialGC/metaspace512MiB. Перед ними отдельная verification
+задача пишет конфигурацию компилятора и фактический max heap процесса Gradle;
+это не замер RSS worker. Gradle остаётся2560MiB: Java preflight native jobs1,
+assemble native jobs4. Используются только штатные Gradle up-to-date checks;
+outputs не копируются. Эта настройка compiler fork действует только явно в
+GitHub Actions репозитория byteKayze/MontoGram; desktop profile не меняется.
 
 ## Ограничения и проверка
 
