@@ -41,7 +41,7 @@ ANSI_ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))
 FAILED_TASK = re.compile(r"^> Task (:[^\s]+) FAILED$", re.MULTILINE)
 WARNING = re.compile(r"(?:\bwarning\b|\bdeprecat(?:ed|ion)\b|^w:)", re.IGNORECASE)
 FAILURE = re.compile(r"(?:^FAILURE:|^\* What went wrong:|^e:|\berror:)", re.IGNORECASE)
-SOURCE_FAILURE = re.compile(r"(?:^e:|\berror:)", re.IGNORECASE)
+SOURCE_FAILURE = re.compile(r"(?:^e:|\berror:|\b(?:OutOfMemoryError|StackOverflowError|CompilerException|CompilationFailedException|FatalError|ExceptionInInitializerError|NoClassDefFoundError)\b|^Caused by:)", re.IGNORECASE)
 AUTHORIZATION_VALUE = re.compile(
     r"(\bauthorization\s*:\s*)(?:bearer\s+)?[^\r\n]+", re.IGNORECASE
 )
@@ -319,6 +319,7 @@ def extract_diagnostics(log: Path) -> Diagnostics:
     failure_block: list[str] | None = None
     failure_block_truncated = False
     excerpts: list[str] = []
+    failure_excerpts: list[str] = []
     tail: deque[str] = deque(maxlen=MAX_EXCERPT_LINES)
 
     def finish_failure_block() -> None:
@@ -351,10 +352,12 @@ def extract_diagnostics(log: Path) -> Diagnostics:
                     failed_tasks_truncated = True
 
             is_warning = bool(WARNING.search(line))
-            is_failure = bool(FAILURE.search(line) or " FAILED" in line)
+            is_failure = bool(SOURCE_FAILURE.search(line) or FAILURE.search(line) or " FAILED" in line)
             if is_warning:
                 warning_overflow += add_fingerprint(warnings, line)
-            if (is_warning or is_failure) and len(excerpts) < MAX_EXCERPT_LINES:
+            if is_failure and len(failure_excerpts) < MAX_EXCERPT_LINES:
+                failure_excerpts.append(bounded_line)
+            elif is_warning and len(excerpts) < MAX_EXCERPT_LINES:
                 excerpts.append(bounded_line)
 
             if line.startswith("* What went wrong:"):
@@ -394,7 +397,7 @@ def extract_diagnostics(log: Path) -> Diagnostics:
         warning_fingerprints_truncated=warning_overflow,
         failure_fingerprints=failures,
         failure_fingerprints_truncated=failure_overflow,
-        excerpt=excerpts or list(tail),
+        excerpt=(failure_excerpts + excerpts)[:MAX_EXCERPT_LINES] or list(tail),
     )
 
 
