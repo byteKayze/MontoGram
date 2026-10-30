@@ -78,7 +78,7 @@ public final class MontogramReaderActivity extends BaseFragment implements Notif
         if(query!=null){query.setText("");query.setVisibility(View.GONE);}if(output!=null)output.setText(text(R.string.MontogramReaderClosed));if(counter!=null)counter.setText("");if(copy!=null)copy.setEnabled(false);if(previous!=null)previous.setEnabled(false);if(next!=null)next.setEnabled(false);if(root!=null)root.setVisibility(View.VISIBLE);
     }
     @Override public void onPause(){drop();super.onPause();}
-    @Override public void didReceivedNotification(int id,int account,Object... args){drop(); // Conservative account-event revocation; never wait for the parent cache to update.}
+    @Override public void didReceivedNotification(int id,int account,Object... args){drop(); /* Conservative account-event revocation; never wait for the parent cache to update. */ }
     @Override public void onFragmentDestroy(){
         drop();destroyed=true;for(int event:EVENTS)NotificationCenter.getInstance(currentAccount).removeObserver(this,event);NotificationCenter.getGlobalInstance().removeObserver(this,NotificationCenter.activeAccountChanged);
         if(root!=null&&root.getViewTreeObserver().isAlive()){if(drawGuard!=null)root.getViewTreeObserver().removeOnPreDrawListener(drawGuard);if(focusGuard!=null)root.getViewTreeObserver().removeOnWindowFocusChangeListener(focusGuard);}drawGuard=null;focusGuard=null;super.onFragmentDestroy();
