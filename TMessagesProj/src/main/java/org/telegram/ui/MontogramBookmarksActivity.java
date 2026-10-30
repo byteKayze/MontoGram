@@ -33,13 +33,14 @@ import org.telegram.ui.Components.UniversalFragment;
 
 /** Local references only; opens the current server message through native access checks. */
 public final class MontogramBookmarksActivity extends UniversalFragment {
-    private static final int ADD=1, RETAIN=2, CLEAR=3, RETRY=4, RESET=5, FIRST=100;
+    private static final int ADD=1, RETAIN=2, CLEAR=3, RETRY=4, RESET=5, FOLDERS=6, FOLDER_ACTIONS=7, FIRST=100;
     private MontogramBookmarks.Snapshot snapshot;
     private MontogramBookmarks.Request request;
     private MontogramBookmarks.Status failure;
     private boolean active, busy, destroyed;
     private int generation;
     private EditText labelInput;
+    private String folderFilter;
     private long capturePeer;private int captureMessage,networkRequest;
     private BooleanSupplier captureAllowed;
     private boolean transitionReady;
@@ -69,7 +70,7 @@ public final class MontogramBookmarksActivity extends UniversalFragment {
     @Override public void onResume(){super.onResume();active=true;load();}
     private static void eraseView(View view){if(view instanceof TextView)((TextView)view).setText("");if(view instanceof ViewGroup){ViewGroup group=(ViewGroup)view;for(int i=0;i<group.getChildCount();i++)eraseView(group.getChildAt(i));}}
     private void drop() {
-        active=false;++generation;captureAllowed=null;capturePeer=0;captureMessage=0;transitionReady=false;
+        folderFilter=null;active=false;++generation;captureAllowed=null;capturePeer=0;captureMessage=0;transitionReady=false;
         if(networkRequest!=0)getConnectionsManager().cancelRequest(networkRequest,true);networkRequest=0;
         if(request!=null)request.cancel();request=null;busy=false;
         MontogramBookmarks.revoke(snapshot);snapshot=null;failure=null;
@@ -84,7 +85,13 @@ public final class MontogramBookmarksActivity extends UniversalFragment {
         List<MontogramBookmarkData.Entry> rows=MontogramBookmarks.entries(snapshot);
         if(rows==null){items.add(UItem.asShadow(text(R.string.MontogramBookmarksError)));items.add(UItem.asButton(RETRY,R.drawable.settings_chat,text(R.string.Retry)));if(failure!=null)items.add(UItem.asButton(RESET,R.drawable.settings_chat,text(R.string.MontogramBookmarksReset)));return;}
         items.add(UItem.asShadow(text(MontogramBookmarks.mode(snapshot)==MontogramBookmarks.Mode.RETAINED?R.string.MontogramBookmarksRetainedInfo:R.string.MontogramBookmarksMemoryInfo)));
-        for(int i=0;i<rows.size();i++)items.add(UItem.asButton(FIRST+i,R.drawable.settings_chat,rows.get(i).label.isEmpty()?rows.get(i).dialogId+" · "+rows.get(i).messageId:rows.get(i).label));
+        items.add(UItem.asButton(FOLDERS,R.drawable.settings_chat,text(R.string.MontogramBookmarkFolders)+(folderFilter==null?"":" · "+(folderFilter.isEmpty()?text(R.string.MontogramUnfiled):folderFilter))));
+        if(folderFilter!=null&&!folderFilter.isEmpty())items.add(UItem.asButton(FOLDER_ACTIONS,R.drawable.settings_chat,text(R.string.MontogramFolderActions)));
+        int visible=0;
+        for(int i=0;i<rows.size();i++)if(folderFilter==null||folderFilter.equals(rows.get(i).folder)){
+            items.add(UItem.asButton(FIRST+i,R.drawable.settings_chat,rows.get(i).label.isEmpty()?rows.get(i).dialogId+" · "+rows.get(i).messageId:rows.get(i).label));visible++;
+        }
+        if(!rows.isEmpty()&&visible==0)items.add(UItem.asShadow(text(R.string.NoResult)));
         if(rows.isEmpty())items.add(UItem.asShadow(text(R.string.MontogramBookmarksEmpty)));
         if(MontogramBookmarks.mode(snapshot)==MontogramBookmarks.Mode.PROCESS_MEMORY)items.add(UItem.asButton(RETAIN,R.drawable.settings_chat,text(R.string.MontogramBookmarksRetain)));
         items.add(UItem.asButton(CLEAR,R.drawable.settings_chat,text(R.string.MontogramBookmarksReset)));
@@ -95,6 +102,8 @@ public final class MontogramBookmarksActivity extends UniversalFragment {
         if(item.id==RETRY){load();return;}
         if(item.id==RESET){confirmClear(true);return;}
         if(!MontogramBookmarks.current(snapshot)){load();return;}
+        if(item.id==FOLDERS){chooseFolder();return;}
+        if(item.id==FOLDER_ACTIONS){folderActions();return;}
         if(item.id==RETAIN)confirmRetention();
         else if(item.id==CLEAR)confirmClear(false);
         else {
@@ -102,12 +111,50 @@ public final class MontogramBookmarksActivity extends UniversalFragment {
             if(rows!=null&&index>=0&&index<rows.size()){
                 MontogramBookmarkData.Entry row=rows.get(index);final int token=generation;
                 showDialog(new AlertDialog.Builder(getParentActivity(),getResourceProvider()).setTitle(row.label.isEmpty()?getTitle():row.label)
-                    .setItems(new CharSequence[]{text(R.string.MontogramBookmarksOpen),text(R.string.MontogramBookmarksRename),text(R.string.Delete)},(d,w)->{
+                    .setItems(new CharSequence[]{text(R.string.MontogramBookmarksOpen),text(R.string.MontogramBookmarksRename),text(R.string.Delete),text(R.string.MontogramMoveToFolder)},(d,w)->{
                         if(!alive(token)||!MontogramBookmarks.current(snapshot))return;
-                        if(w==0)open(row);else if(w==1)edit(row,null,0,0);else{busy=true;refresh();request=MontogramBookmarks.delete(snapshot,row.id,(status,value)->complete(token,status,value));}
+                        if(w==0)open(row);else if(w==1)edit(row,null,0,0);else if(w==2){busy=true;refresh();request=MontogramBookmarks.delete(snapshot,row.id,(status,value)->complete(token,status,value));}else if(w==3)editFolder(row.id,row.folder);
                     }).create());
             }
         }
+    }
+    private java.util.ArrayList<String> folderNames(){
+        java.util.TreeSet<String> names=new java.util.TreeSet<>();List<MontogramBookmarkData.Entry> rows=MontogramBookmarks.entries(snapshot);
+        if(rows!=null)for(MontogramBookmarkData.Entry row:rows)if(!row.folder.isEmpty())names.add(row.folder);
+        return new java.util.ArrayList<>(names);
+    }
+    private void chooseFolder(){
+        final int token=generation;final MontogramBookmarks.Snapshot before=snapshot;
+        java.util.ArrayList<String> names=folderNames();CharSequence[] labels=new CharSequence[names.size()+2];labels[0]=text(R.string.MontogramAllFolders);labels[1]=text(R.string.MontogramUnfiled);for(int i=0;i<names.size();i++)labels[i+2]=names.get(i);
+        showDialog(new AlertDialog.Builder(getParentActivity(),getResourceProvider()).setTitle(text(R.string.MontogramBookmarkFolders)).setMessage(text(R.string.MontogramBookmarkFoldersInfo))
+                .setItems(labels,(dialog,index)->{if(!alive(token)||!MontogramBookmarks.current(before))return;folderFilter=index==0?null:index==1?"":names.get(index-2);refresh();}).create());
+    }
+    private void editFolder(long id,String previous){
+        final int token=generation;final MontogramBookmarks.Snapshot before=snapshot;final AtomicBoolean used=new AtomicBoolean();
+        labelInput=new EditText(getParentActivity());EditText input=labelInput;input.setSaveEnabled(false);input.setSingleLine(true);input.setText(previous);input.setHint(text(R.string.MontogramFolderName));input.setTextColor(getThemedColor(Theme.key_dialogTextBlack));input.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));input.setFilters(new InputFilter[]{new InputFilter.LengthFilter(MontogramBookmarkData.MAX_FOLDER)});
+        LinearLayout fields=new LinearLayout(getParentActivity());fields.setPadding(AndroidUtilities.dp(24),0,AndroidUtilities.dp(24),0);fields.addView(input,new LinearLayout.LayoutParams(-1,-2));
+        showDialog(new AlertDialog.Builder(getParentActivity(),getResourceProvider()).setTitle(text(id>0?R.string.MontogramMoveToFolder:R.string.MontogramRenameFolder)).setMessage(text(R.string.MontogramBookmarkFoldersInfo)).setView(fields)
+                .setNegativeButton(text(R.string.Cancel),null).setPositiveButton(text(R.string.Save),(dialog,button)->{
+                    if(!used.compareAndSet(false,true)||!alive(token)||busy||!MontogramBookmarks.current(before))return;
+                    String name;try{name=MontogramBookmarkData.canonicalFolderName(input.getText().toString());if(id==0&&name.isEmpty())throw new IllegalArgumentException("Use explicit dissolve");}catch(IllegalArgumentException invalid){message(R.string.MontogramBookmarksInvalid);return;}
+                    busy=true;refresh();
+                    request=id>0?MontogramBookmarks.move(before,id,name,(status,value)->complete(token,status,value)):MontogramBookmarks.renameFolder(before,previous,name,(status,value)->{if(status==MontogramBookmarks.Status.OK)folderFilter=name;complete(token,status,value);});
+                }).create());
+    }
+    private void folderActions(){
+        if(folderFilter==null||folderFilter.isEmpty())return;
+        final int token=generation;final MontogramBookmarks.Snapshot before=snapshot;final String folder=folderFilter;
+        int count=0;for(MontogramBookmarkData.Entry entry:MontogramBookmarks.entries(before))if(entry.folder.equals(folder))count++;
+        final int members=count;
+        showDialog(new AlertDialog.Builder(getParentActivity(),getResourceProvider()).setTitle(folder)
+                .setItems(new CharSequence[]{text(R.string.MontogramRenameFolder),text(R.string.MontogramDissolveFolder)},(dialog,index)->{
+                    if(!alive(token)||!MontogramBookmarks.current(before))return;
+                    if(index==0){editFolder(0,folder);return;}
+                    if(index!=1)return;
+                    final AtomicBoolean used=new AtomicBoolean();
+                    showDialog(new AlertDialog.Builder(getParentActivity(),getResourceProvider()).setTitle(text(R.string.MontogramDissolveFolder)).setMessage(String.format(java.util.Locale.getDefault(),text(R.string.MontogramDissolveFolderInfo),members))
+                            .setNegativeButton(text(R.string.Cancel),null).setPositiveButton(text(R.string.MontogramDissolveFolder),(d,w)->{if(!used.compareAndSet(false,true)||!alive(token)||busy||!MontogramBookmarks.current(before))return;busy=true;refresh();request=MontogramBookmarks.renameFolder(before,folder,"",(status,value)->{if(status==MontogramBookmarks.Status.OK)folderFilter="";complete(token,status,value);});}).create());
+                }).create());
     }
     @Override public void onTransitionAnimationEnd(boolean open,boolean backward){super.onTransitionAnimationEnd(open,backward);if(open){transitionReady=true;maybeCapture();}}
     private void maybeCapture(){

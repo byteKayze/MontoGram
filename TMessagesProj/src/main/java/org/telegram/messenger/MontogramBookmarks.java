@@ -46,6 +46,14 @@ public final class MontogramBookmarks {
     public static boolean current(Snapshot value) { ui(); return value != null && authorized(value.owner); }
     public static Mode mode(Snapshot value) { return current(value) ? value.mode : null; }
     public static List<MontogramBookmarkData.Entry> entries(Snapshot value) { return current(value) ? value.owner.data.entries : null; }
+    public static byte[] exportPortable(Snapshot value){
+        ui();if(!current(value))throw new IllegalStateException("Stale local owner");
+        return MontogramLocalExport.bookmarks(value.owner.data.entries);
+    }
+    public static int serializedBytes(Snapshot value) throws java.io.IOException {
+        ui();if(!current(value))throw new IllegalStateException("Stale local owner");
+        byte[] bytes=value.owner.data.encode();try{return bytes.length;}finally{java.util.Arrays.fill(bytes,(byte)0);}
+    }
     public static void revoke(Snapshot value) { ui(); if (value != null) MEMORY.revoke(value.owner); }
 
     private static MontogramOwnerMemory.Snapshot<MontogramBookmarkData> acquire(int account){
@@ -118,6 +126,8 @@ public final class MontogramBookmarks {
 
     public static Request save(Snapshot previous,long dialogId,int messageId,String label,Callback callback){return change(previous,v->v.upsert(dialogId,messageId,label),callback);}
     public static Request rename(Snapshot previous,long id,String label,Callback callback){return change(previous,v->v.rename(id,label),callback);}
+    public static Request move(Snapshot previous,long id,String folder,Callback callback){return change(previous,v->v.move(id,folder),callback);}
+    public static Request renameFolder(Snapshot previous,String folder,String replacement,Callback callback){return change(previous,v->v.renameFolder(folder,replacement),callback);}
     public static Request delete(Snapshot previous,long id,Callback callback){return change(previous,v->v.remove(id),callback);}
     private static Request change(Snapshot previous,java.util.function.UnaryOperator<MontogramBookmarkData> change,Callback callback){
         ui();

@@ -21,15 +21,16 @@ import java.util.List;
  * at capture/open time, never inferred from this codec accepting a reference.
  */
 public final class MontogramBookmarkData {
-    public static final int MAX_COUNT = 128, MAX_LABEL = 64, MAX_BYTES = 32768;
-    private static final int MAGIC = 0x4d424b31; // MBK1
+    public static final int MAX_COUNT = 128, MAX_LABEL = 64, MAX_FOLDER = 32, MAX_FOLDERS = 32, MAX_BYTES = 32768;
+    private static final int MAGIC = 0x4d424b31, FOLDER_MAGIC = 0x4d424b32; // MBK1/MBK2
 
     public static final class Entry {
         public final long id, dialogId;
         public final int messageId;
-        public final String label;
+        public final String label, folder;
 
-        private Entry(long id, long dialogId, int messageId, String label) {
+        private Entry(long id, long dialogId, int messageId, String label) { this(id,dialogId,messageId,label,""); }
+        private Entry(long id, long dialogId, int messageId, String label, String folder) {
             if (id <= 0 || dialogId == 0 || messageId <= 0) {
                 throw new IllegalArgumentException("Invalid bookmark reference");
             }
@@ -37,6 +38,7 @@ public final class MontogramBookmarkData {
             this.dialogId = dialogId;
             this.messageId = messageId;
             this.label = normalize(label);
+            this.folder = canonicalFolderName(folder);
         }
     }
 
@@ -57,6 +59,13 @@ public final class MontogramBookmarkData {
                 throw new IllegalArgumentException("Duplicate or invalid bookmark identity");
             }
         }
+        HashSet<String> folders = new HashSet<>();
+        boolean version2=false;
+        for(Entry entry:entries) if(!entry.folder.isEmpty()){folders.add(entry.folder);version2=true;}
+        if(folders.size()>MAX_FOLDERS)throw new IllegalArgumentException("Folder limit reached");
+        int size=24;
+        for(Entry entry:entries)size+=24+entry.label.getBytes(StandardCharsets.UTF_8).length+(version2?4+entry.folder.getBytes(StandardCharsets.UTF_8).length:0);
+        if(size>MAX_BYTES)throw new IllegalArgumentException("Bookmark payload too large");
         this.revision = revision;
         this.nextId = nextId;
         this.entries = Collections.unmodifiableList(new ArrayList<>(entries));
@@ -85,7 +94,7 @@ public final class MontogramBookmarkData {
 
     public MontogramBookmarkData upsert(long dialogId, int messageId, String label) {
         Entry previous = find(dialogId, messageId);
-        Entry replacement = new Entry(previous == null ? nextId : previous.id, dialogId, messageId, label);
+        Entry replacement = new Entry(previous == null ? nextId : previous.id, dialogId, messageId, label, previous == null ? "" : previous.folder);
         if (previous != null && previous.label.equals(replacement.label)) return this;
         if (previous == null && (entries.size() == MAX_COUNT || nextId == Long.MAX_VALUE)) {
             throw new IllegalArgumentException("Bookmark limit reached");
@@ -100,6 +109,35 @@ public final class MontogramBookmarkData {
         Entry previous = get(id);
         if (previous == null) throw new IllegalArgumentException("Unknown bookmark");
         return upsert(previous.dialogId, previous.messageId, label);
+    }
+
+    /** Empty folders are not stored; names are NFC, trimmed and case-sensitive. */
+    public List<String> folders() {
+        java.util.TreeSet<String> names=new java.util.TreeSet<>();
+        for(Entry entry:entries)if(!entry.folder.isEmpty())names.add(entry.folder);
+        return Collections.unmodifiableList(new ArrayList<>(names));
+    }
+    public MontogramBookmarkData move(long id,String folder) {
+        Entry previous=get(id);if(previous==null)throw new IllegalArgumentException("Unknown bookmark");
+        String canonical=canonicalFolderName(folder);if(previous.folder.equals(canonical))return this;
+        ArrayList<Entry> copy=new ArrayList<>(entries);
+        copy.set(entries.indexOf(previous),new Entry(previous.id,previous.dialogId,previous.messageId,previous.label,canonical));
+        return new MontogramBookmarkData(nextRevision(),nextId,copy);
+    }
+    public MontogramBookmarkData renameFolder(String folder,String replacement) {
+        String before=canonicalFolderName(folder),after=canonicalFolderName(replacement);
+        if(before.isEmpty()||!folders().contains(before))throw new IllegalArgumentException("Unknown folder");
+        if(before.equals(after))return this;
+        if(!after.isEmpty()&&folders().contains(after))throw new IllegalArgumentException("Folder already exists");
+        ArrayList<Entry> copy=new ArrayList<>();
+        for(Entry entry:entries)copy.add(entry.folder.equals(before)?new Entry(entry.id,entry.dialogId,entry.messageId,entry.label,after):entry);
+        return new MontogramBookmarkData(nextRevision(),nextId,copy);
+    }
+    public static String canonicalFolderName(String folder) {
+        if(folder==null||folder.length()>MAX_FOLDER)throw new IllegalArgumentException("Invalid folder name");
+        String value=java.text.Normalizer.normalize(normalize(folder),java.text.Normalizer.Form.NFC);
+        if(value.length()>MAX_FOLDER)throw new IllegalArgumentException("Invalid folder name");
+        return value;
     }
 
     public MontogramBookmarkData remove(long id) {
@@ -149,7 +187,8 @@ public final class MontogramBookmarkData {
     public byte[] encode() throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         DataOutputStream output = new DataOutputStream(bytes);
-        output.writeInt(MAGIC);
+        boolean version2=false;for(Entry entry:entries)if(!entry.folder.isEmpty())version2=true;
+        output.writeInt(version2?FOLDER_MAGIC:MAGIC);
         output.writeLong(revision);
         output.writeLong(nextId);
         output.writeInt(entries.size());
@@ -160,6 +199,7 @@ public final class MontogramBookmarkData {
             byte[] label = utf8(entry.label);
             output.writeInt(label.length);
             output.write(label);
+            if(version2){byte[] folder=utf8(entry.folder);output.writeInt(folder.length);output.write(folder);}
         }
         output.flush();
         if (bytes.size() > MAX_BYTES) throw new IOException("Bookmark payload too large");
@@ -170,7 +210,8 @@ public final class MontogramBookmarkData {
         if (bytes == null || bytes.length > MAX_BYTES) throw new IOException("Invalid bookmark payload size");
         DataInputStream input = new DataInputStream(new ByteArrayInputStream(bytes));
         try {
-            if (input.readInt() != MAGIC) throw new IOException("Unknown bookmark format");
+            int magic=input.readInt();if(magic!=MAGIC&&magic!=FOLDER_MAGIC)throw new IOException("Unknown bookmark format");
+            boolean version2=magic==FOLDER_MAGIC;
             long revision = input.readLong(), nextId = input.readLong();
             int count = input.readInt();
             if (count < 0 || count > MAX_COUNT) throw new IOException("Invalid bookmark count");
@@ -186,8 +227,14 @@ public final class MontogramBookmarkData {
                 String label = StandardCharsets.UTF_8.newDecoder()
                     .onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT)
                     .decode(ByteBuffer.wrap(labelBytes)).toString();
-                Entry entry = new Entry(id, dialogId, messageId, label);
-                if (!label.equals(entry.label)) throw new IOException("Noncanonical bookmark label");
+                String folder="";
+                if(version2){
+                    int folderLength=input.readInt();if(folderLength<0||folderLength>MAX_FOLDER*3||folderLength>input.available())throw new IOException("Invalid folder length");
+                    byte[] data=new byte[folderLength];input.readFully(data);
+                    folder=StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(data)).toString();
+                }
+                Entry entry = new Entry(id, dialogId, messageId, label,folder);
+                if (!label.equals(entry.label)||!folder.equals(entry.folder)) throw new IOException("Noncanonical bookmark label");
                 entries.add(entry);
             }
             if (input.available() != 0) throw new IOException("Trailing bookmark data");

@@ -98,7 +98,7 @@
         {
           "name": "Compile and package canonical APK",
           "id": "build",
-          "run": "python3 ci/vendor/gradle_run.py --root \"/tmp/montogram-gradle\" run --workflow \"${{ steps.managed.outputs.workflow }}\" --scope targeted --question \"Does this reviewed source compile and package the alpha5 universal64 APK?\" -- ./gradlew-montogram :TMessagesProj_AppStandalone:assembleAfatStandalone -PmontogramAbi=universal -PmontogramMinify=false -PmontogramHeapMiB=2560 --configure-on-demand --max-workers=1 --no-parallel --no-daemon --dependency-verification strict",
+          "run": "python3 ci/vendor/gradle_run.py --root \"/tmp/montogram-gradle\" run --workflow \"${{ steps.managed.outputs.workflow }}\" --scope targeted --question \"Does this reviewed source compile and package the alpha6 universal64 APK?\" -- ./gradlew-montogram :TMessagesProj_AppStandalone:assembleAfatStandalone -PmontogramAbi=universal -PmontogramMinify=false -PmontogramHeapMiB=2560 --configure-on-demand --max-workers=1 --no-parallel --no-daemon --dependency-verification strict",
           "env": {
             "MONTOGRAM_JAVA_HOME": "${{ env.JAVA_HOME }}"
           }

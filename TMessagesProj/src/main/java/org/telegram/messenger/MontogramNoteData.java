@@ -52,6 +52,14 @@ public final class MontogramNoteData {
         if(peer==0)throw new IllegalArgumentException("Invalid note peer");Entry previous=get(peer);if(previous==null)return this;
         ArrayList<Entry> copy=new ArrayList<>(entries);copy.remove(previous);return new MontogramNoteData(nextRevision(),copy);
     }
+    public MontogramNoteData removeAll(long[] peers){
+        if(peers==null||peers.length>MAX_COUNT)throw new IllegalArgumentException("Invalid selection");
+        if(peers.length==0)return this;
+        java.util.HashSet<Long> selected=new java.util.HashSet<>();
+        for(long peer:peers)if(!selected.add(peer)||get(peer)==null)throw new IllegalArgumentException("Stale or duplicate selected note");
+        ArrayList<Entry> copy=new ArrayList<>();for(Entry entry:entries)if(!selected.contains(entry.dialogId))copy.add(entry);
+        return new MontogramNoteData(nextRevision(),copy);
+    }
     public MontogramNoteData clear(){return entries.isEmpty()?this:new MontogramNoteData(nextRevision(),Collections.emptyList());}
     private static byte[] utf8(String value)throws CharacterCodingException{
         ByteBuffer buffer=StandardCharsets.UTF_8.newEncoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).encode(CharBuffer.wrap(value));

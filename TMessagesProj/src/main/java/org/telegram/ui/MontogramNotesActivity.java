@@ -34,7 +34,7 @@ import org.telegram.ui.Components.UniversalFragment;
 
 /** Identifier-only manager for user-authored notes; no chat resolver, network or send API. */
 public final class MontogramNotesActivity extends UniversalFragment implements NotificationCenter.NotificationCenterDelegate {
-    private static final int ADD=1, RETAIN=2, CLEAR=3, RETRY=4, RESET=5, FIRST=100;
+    private static final int ADD=1, RETAIN=2, CLEAR=3, RETRY=4, RESET=5, SELECT_ALL=6, DELETE_SELECTED=7, CLEAR_SELECTION=8, FIRST=100;
     private MontogramNotes.Snapshot snapshot;
     private MontogramNotes.Request request;
     private MontogramNotes.Status failure;
@@ -43,6 +43,8 @@ public final class MontogramNotesActivity extends UniversalFragment implements N
     private NoteEditor editor;
     private EditText searchInput;
     private String query = "";
+    private final java.util.HashSet<Long> selectedNotes=new java.util.HashSet<>();
+    private boolean selectionMode;
     private boolean windowSearchVisible = true;
     private ViewTreeObserver searchTree;
     private final ViewTreeObserver.OnWindowFocusChangeListener searchFocus = focused -> {
@@ -81,8 +83,9 @@ public final class MontogramNotesActivity extends UniversalFragment implements N
         View root = super.createView(context);
         ActionBarMenuItem search = actionBar.createMenu().addItem(90, R.drawable.outline_header_search)
                 .setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
-                    @Override public void onSearchCollapse() { query = ""; refresh(); }
+                    @Override public void onSearchCollapse() { selectedNotes.clear();selectionMode=false;query = ""; refresh(); }
                     @Override public void onTextChanged(EditText input) {
+                        selectedNotes.clear();selectionMode=false;
                         if (!canSearch()) {
                             query = "";
                             if (input.length() != 0) input.setText("");
@@ -124,7 +127,7 @@ public final class MontogramNotesActivity extends UniversalFragment implements N
     private static void eraseView(View view){if(view instanceof TextView)((TextView)view).setText("");if(view instanceof ViewGroup){ViewGroup group=(ViewGroup)view;for(int i=0;i<group.getChildCount();i++)eraseView(group.getChildAt(i));}}
     private void drop() {
         active=false;++generation;captureAllowed=null;capturePeer=0;transitionReady=false;
-        query = ""; if (searchInput != null) searchInput.setText("");
+        selectedNotes.clear();selectionMode=false;query = ""; if (searchInput != null) searchInput.setText("");
         if(request!=null)request.cancel();request=null;busy=false;
         MontogramNotes.revoke(snapshot);snapshot=null;failure=null;
         if(editor!=null)editor.closeAndErase();
@@ -140,24 +143,44 @@ public final class MontogramNotesActivity extends UniversalFragment implements N
         items.add(UItem.asShadow(text(MontogramNotes.mode(snapshot)==MontogramNotes.Mode.RETAINED?R.string.MontogramNotesRetainedInfo:R.string.MontogramNotesMemoryInfo)));
         int matches = 0;
         for(int i=0;i<rows.size();i++)if(MontogramNoteSearch.matches(rows.get(i).text,query)){
-            items.add(UItem.asButton(FIRST+i,R.drawable.settings_chat,Long.toString(rows.get(i).dialogId)));matches++;
+            if(selectionMode)items.add(UItem.asCheck(FIRST+i,Long.toString(rows.get(i).dialogId)).setChecked(selectedNotes.contains(rows.get(i).dialogId)));
+            else items.add(UItem.asButton(FIRST+i,R.drawable.settings_chat,Long.toString(rows.get(i).dialogId)));matches++;
         }
+        if(selectionMode){items.add(UItem.asButton(SELECT_ALL,R.drawable.settings_chat,text(R.string.MontogramSelectVisibleNotes)));items.add(UItem.asButton(CLEAR_SELECTION,R.drawable.settings_chat,text(R.string.MontogramClearSelection)));if(!selectedNotes.isEmpty())items.add(UItem.asButton(DELETE_SELECTED,R.drawable.settings_chat,String.format(java.util.Locale.getDefault(),text(R.string.MontogramDeleteSelectedCount),selectedNotes.size())));}
         if(!rows.isEmpty()&&matches==0)items.add(UItem.asShadow(text(R.string.NoResult)));
         if(rows.isEmpty())items.add(UItem.asShadow(text(R.string.MontogramNotesEmpty)));
         if(MontogramNotes.mode(snapshot)==MontogramNotes.Mode.PROCESS_MEMORY)items.add(UItem.asButton(RETAIN,R.drawable.settings_chat,text(R.string.MontogramNotesRetain)));
         items.add(UItem.asButton(CLEAR,R.drawable.settings_chat,text(R.string.MontogramNotesReset)));
     }
-    @Override protected boolean onLongClick(UItem item,View view,int position,float x,float y){return false;}
+    @Override protected boolean onLongClick(UItem item,View view,int position,float x,float y){
+        if(!alive(generation)||busy||!MontogramNotes.current(snapshot))return false;
+        List<MontogramNoteData.Entry> rows=MontogramNotes.entries(snapshot);int index=item.id-FIRST;if(index<0||index>=rows.size())return false;
+        selectionMode=true;toggleSelected(rows.get(index).dialogId);return true;
+    }
+    private void toggleSelected(long peer){if(!selectedNotes.remove(peer))selectedNotes.add(peer);refresh();}
+    private void deleteSelection(){
+        final int token=generation;final MontogramNotes.Snapshot before=snapshot;final AtomicBoolean used=new AtomicBoolean();
+        final long[] peers=new long[selectedNotes.size()];int i=0;StringBuilder list=new StringBuilder();for(Long peer:selectedNotes){peers[i++]=peer;list.append("\n").append(peer);}
+        showDialog(new AlertDialog.Builder(getParentActivity(),getResourceProvider()).setTitle(text(R.string.MontogramDeleteSelectedCountTitle))
+                .setMessage(String.format(java.util.Locale.getDefault(),text(R.string.MontogramDeleteSelectedInfo),peers.length)+list)
+                .setNegativeButton(text(R.string.Cancel),null).setPositiveButton(text(R.string.Delete),(dialog,button)->{
+                    if(!used.compareAndSet(false,true)||!alive(token)||busy||!MontogramNotes.current(before))return;busy=true;refresh();
+                    request=MontogramNotes.deleteSelected(before,peers,(status,value)->{if(status==MontogramNotes.Status.OK){selectedNotes.clear();selectionMode=false;}complete(token,status,value);});
+                }).create());
+    }
     @Override protected void onClick(UItem item,View view,int position,float x,float y) {
         if(!alive(generation)||busy)return;
         if(item.id==RETRY){load();return;}
         if(item.id==RESET){confirmClear(true);return;}
         if(!MontogramNotes.current(snapshot)){load();return;}
+        if(item.id==SELECT_ALL){List<MontogramNoteData.Entry> rows=MontogramNotes.entries(snapshot);for(MontogramNoteData.Entry row:rows)if(MontogramNoteSearch.matches(row.text,query))selectedNotes.add(row.dialogId);refresh();return;}
+        if(item.id==CLEAR_SELECTION){selectedNotes.clear();selectionMode=false;refresh();return;}
+        if(item.id==DELETE_SELECTED){deleteSelection();return;}
         if(item.id==RETAIN)confirmRetention();
         else if(item.id==CLEAR)confirmClear(false);
         else {
             List<MontogramNoteData.Entry> rows=MontogramNotes.entries(snapshot);int index=item.id-FIRST;
-            if(rows!=null&&index>=0&&index<rows.size())edit(rows.get(index).dialogId,null);
+            if(rows!=null&&index>=0&&index<rows.size()){if(selectionMode)toggleSelected(rows.get(index).dialogId);else edit(rows.get(index).dialogId,null);}
         }
     }
     @Override public void onTransitionAnimationEnd(boolean open,boolean backward){super.onTransitionAnimationEnd(open,backward);if(open){transitionReady=true;maybeEditCaptured();}}

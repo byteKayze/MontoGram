@@ -46,6 +46,14 @@ public final class MontogramNotes {
     public static boolean current(Snapshot value) { ui(); return value != null && authorized(value.owner); }
     public static Mode mode(Snapshot value) { return current(value) ? value.mode : null; }
     public static List<MontogramNoteData.Entry> entries(Snapshot value) { return current(value) ? value.owner.data.entries : null; }
+    public static byte[] exportPortable(Snapshot value){
+        ui();if(!current(value))throw new IllegalStateException("Stale local owner");
+        return MontogramLocalExport.notes(value.owner.data.entries);
+    }
+    public static int serializedBytes(Snapshot value) throws java.io.IOException {
+        ui();if(!current(value))throw new IllegalStateException("Stale local owner");
+        byte[] bytes=value.owner.data.encode();try{return bytes.length;}finally{java.util.Arrays.fill(bytes,(byte)0);}
+    }
     public static void revoke(Snapshot value) { ui(); if (value != null) MEMORY.revoke(value.owner); }
 
     private static MontogramOwnerMemory.Snapshot<MontogramNoteData> acquire(int account){
@@ -117,6 +125,7 @@ public final class MontogramNotes {
     }
 
     public static Request save(Snapshot previous,long dialogId,String text,Callback callback){return change(previous,value->value.put(dialogId,text),callback);}
+    public static Request deleteSelected(Snapshot previous,long[] peers,Callback callback){long[] copy=peers==null?null:peers.clone();return change(previous,v->v.removeAll(copy),callback);}
     public static Request delete(Snapshot previous,long dialogId,Callback callback){return change(previous,value->value.remove(dialogId),callback);}
     private static Request change(Snapshot previous,java.util.function.UnaryOperator<MontogramNoteData> change,Callback callback){
         ui();

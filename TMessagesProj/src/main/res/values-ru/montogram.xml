@@ -175,4 +175,58 @@
     <string name="MontogramDuplicateInfo">Введите свой текст до 8192 единиц UTF-16. В предпросмотре убираются повторные непустые строки; первая копия и её перенос сохраняются. Пустые строки остаются; пробелы и регистр учитываются. Разделители: CRLF, CR, LF, NEL, LS и PS. Текст не отправляется и не сохраняется. Копирование — отдельное действие; при выходе или потере фокуса предпросмотр очищается.</string>
     <string name="MontogramDuplicateSummary">Удалено точных повторов строк: %1$d. Копируется только текст предпросмотра, без этого отчёта. Переносы оставшихся строк сохраняются; последний перенос может остаться.</string>
     <string name="MontogramDuplicateRows">Номера исходных строк (начиная с 1):</string>
+
+    <!-- Montogram manual workbench -->
+    <string name="MontogramSplitPreview">Предпросмотр частей текста</string>
+    <string name="MontogramSplitInfo">Только обычный текст. Лимит Telegram считается в UTF-16. Выберите часть для просмотра и копирования; ничего не отправляется. Части вместе сохраняют исходник.</string>
+    <string name="MontogramSplitPart">Часть %1$d из %2$d · %3$d UTF-16</string>
+    <string name="MontogramCompareTexts">Сравнить два текста</string>
+    <string name="MontogramCompareBefore">Первый текст</string>
+    <string name="MontogramCompareAfter">Второй текст</string>
+    <string name="MontogramCompareInfo">Показывает один изменённый участок между общим началом и концом, а не минимальный список правок. Проверяется только введённый вами текст.</string>
+    <string name="MontogramCompareResult">Общее начало: %1$d кодовых точек\nОбщий конец: %2$d кодовых точек\n\nУдалено:\n%3$s\n\nДобавлено:\n%4$s</string>
+    <string name="MontogramUrlStructure">Разобрать структуру URL</string>
+    <string name="MontogramUrlStructureInfo">Структура HTTP(S), а не оценка безопасности. Сетевых запросов нет. Данные пользователя, значения параметров и фрагменты скрыты. Путь и допустимые имена параметров видны и копируются только по нажатию; они могут содержать личную информацию.</string>
+    <string name="MontogramUrlStructureResult">\nСхема: %1$s\nХост: %2$s\nПорт: %3$s\nПуть: %4$s\nПараметров: %5$d</string>
+    <string name="MontogramMixedScripts">Проверить смешанные алфавиты</string>
+    <string name="MontogramMixedScriptsInfo">Подсказка: ограниченные диапазоны латиницы, кириллицы и греческого в буквенно-цифровых цепочках. Это не детектор подмены символов и не оценка безопасности. Позиции указаны в кодовых точках Unicode.</string>
+    <string name="MontogramMixedScriptsRow">\nПозиции %1$d–%2$d: %3$s</string>
+    <string name="MontogramSupportReport">Отчёт о сборке для поддержки</string>
+    <string name="MontogramSupportReportInfo">Только версия, Android API и поддерживаемые ABI; без данных аккаунта, журналов, токенов и путей.</string>
+
+    <!-- Montogram local-data tools -->
+    <string name="MontogramLocalData">Локальные данные</string>
+    <string name="MontogramLocalDataInfo">Число записей и байты сериализованной модели на момент обновления. Это не расход ОЗУ, диска или размер зашифрованных файлов. Содержимое сообщений не читается.</string>
+    <string name="MontogramLocalDataStats">Записей: %1$d · байтов модели: %2$d</string>
+    <string name="MontogramLocalDataUnavailable">Результат не подтверждён или данные недоступны. Обновите экран перед повтором.</string>
+    <string name="MontogramDataBusy">Провайдер документов занят или не ответил. Дополнительный обработчик не запускается.</string>
+    <string name="MontogramDataRefresh">Обновить данные</string>
+    <string name="MontogramExportNotes">Экспорт своих заметок</string>
+    <string name="MontogramExportBookmarkLabels">Экспорт меток и ссылок закладок</string>
+    <string name="MontogramExportTemplates">Экспорт шаблонов ответов</string>
+    <string name="MontogramImportTemplates">Импорт шаблонов с предпросмотром</string>
+    <string name="MontogramChooseDocument">Выбрать файл</string>
+    <string name="MontogramExportNow">Экспортировать текущие записи</string>
+    <string name="MontogramExportDone">Экспорт завершён.</string>
+    <string name="MontogramExportNotesDisclosure">Заметок: %1$d. Провайдеру выбранного файла будут переданы текст ваших заметок и идентификаторы чатов. ID аккаунта и метаданные зашифрованного хранилища не включаются.</string>
+    <string name="MontogramExportBookmarksDisclosure">Закладок: %1$d. Провайдеру выбранного файла будут переданы ID чатов/сообщений, ваши метки и названия папок. Тексты сообщений и ID аккаунта не включаются.</string>
+    <string name="MontogramExportTemplatesDisclosure">Шаблонов: %1$d. Провайдеру выбранного файла будут переданы названия и тексты ответов. Исходные локальные ID, данные аккаунта и метаданные зашифрованного хранилища исключены.</string>
+    <string name="MontogramFinalExportInfo">Подтвердите текущий снимок после выбора файла. При отмене или ошибке провайдер может оставить пустой или неполный документ. Записи приложения не удаляются.</string>
+    <string name="MontogramImportPreview">Шаблонов: %1$d → %2$d. Новых: %3$d. Точные повторы названия/текста пропускаются, прежние записи сохраняются. Ничего не отправляется. Названия из файла:</string>
+    <string name="MontogramMergeTemplates">Добавить шаблоны</string>
+    <string name="MontogramBookmarkFolders">Папки закладок</string>
+    <string name="MontogramBookmarkFoldersInfo">У закладки одна папка, до32 названий по32 UTF-16. Папка создаётся при перемещении закладки; пустые папки исчезают. Пустое имя означает без папки. Старые alpha не читают сохранённые папки: перед возвратом к ним уберите все закладки из папок.</string>
+    <string name="MontogramFolderActions">Действия с папкой</string>
+    <string name="MontogramAllFolders">Все закладки</string>
+    <string name="MontogramUnfiled">Без папки</string>
+    <string name="MontogramFolderName">Название папки, пустое — без папки</string>
+    <string name="MontogramMoveToFolder">Переместить в папку</string>
+    <string name="MontogramRenameFolder">Переименовать папку</string>
+    <string name="MontogramDissolveFolder">Расформировать папку</string>
+    <string name="MontogramDissolveFolderInfo">Переместить %1$d закладок в «Без папки»? Закладки, метки и ссылки сохранятся.</string>
+    <string name="MontogramSelectVisibleNotes">Выбрать найденные заметки</string>
+    <string name="MontogramClearSelection">Выйти из выбора</string>
+    <string name="MontogramDeleteSelectedCount">Удалить выбранные (%1$d)</string>
+    <string name="MontogramDeleteSelectedCountTitle">Удаление выбранных локальных заметок</string>
+    <string name="MontogramDeleteSelectedInfo">Удалить %1$d выбранных локальных заметок текущего аккаунта одной операцией? Чаты и сообщения не меняются. Идентификаторы чатов:</string>
 </resources>

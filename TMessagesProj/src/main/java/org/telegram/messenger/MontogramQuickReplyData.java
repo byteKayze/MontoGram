@@ -66,6 +66,18 @@ public final class MontogramQuickReplyData {
         copy.add(new Reply(nextId,label,text));
         return new MontogramQuickReplyData(nextRevision(),nextId+1,copy);
     }
+    /** Stable merge, exact label/text dedupe; imported IDs/revision never enter this owner. */
+    public MontogramQuickReplyData mergeImported(MontogramQuickReplyData incoming){
+        if(incoming==null)throw new IllegalArgumentException("Missing import");
+        MontogramQuickReplyData target=this;
+        for(Reply candidate:incoming.replies){
+            boolean duplicate=false;
+            for(Reply existing:target.replies)if(existing.label.equals(candidate.label)&&existing.text.equals(candidate.text)){duplicate=true;break;}
+            if(!duplicate)target=target.add(candidate.label,candidate.text);
+        }
+        return target;
+    }
+
     public MontogramQuickReplyData edit(long id,String label,String text) {
         Reply replacement=new Reply(id,label,text);
         ArrayList<Reply> copy=new ArrayList<>(replies);

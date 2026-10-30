@@ -26,7 +26,22 @@ def run(args,**kwargs):
     require(result.returncode==0,'CI tool failed; arguments and output withheld')
     return result.stdout
 
+EXPECTED_SOURCE_PATHS=('TMessagesProj/src/main/java/org/telegram/messenger/MontogramTextWorkbench.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramSafIO.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramBackupIO.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramBookmarkData.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramNoteData.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramQuickReplyData.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramLocalExport.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramNotes.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramBookmarks.java', 'TMessagesProj/src/main/java/org/telegram/messenger/MontogramQuickReplies.java', 'TMessagesProj/src/main/java/org/telegram/ui/MontogramTextToolsActivity.java', 'TMessagesProj/src/main/java/org/telegram/ui/MontogramLocalDataActivity.java', 'TMessagesProj/src/main/java/org/telegram/ui/MontogramNotesActivity.java', 'TMessagesProj/src/main/java/org/telegram/ui/MontogramBookmarksActivity.java', 'TMessagesProj/src/main/java/org/telegram/ui/MontogramSettings.java', 'TMessagesProj/src/main/res/values/montogram.xml', 'TMessagesProj/src/main/res/values-ru/montogram.xml', 'gradle.properties')
+
+def verify_source_inputs():
+    path=ROOT/'montogram/source-manifest-alpha6.json'
+    raw=path.read_bytes();require(len(raw)<16384,'Oversized source manifest')
+    value=json.loads(raw)
+    expected=EXPECTED_SOURCE_PATHS
+    require(value.get('schema')==1 and value.get('tag')=='v0.2.0-alpha.6' and value.get('version_code')==20068,'Source manifest identity mismatch')
+    rows=value.get('files',[]);require([r.get('path') for r in rows]==list(expected),'Source manifest paths mismatch')
+    for row in rows:
+        source=ROOT/row['path']
+        require(source.is_file() and not source.is_symlink() and re.fullmatch('[a-f0-9]{64}',row.get('sha256','')) and sha(source)==row['sha256'],'Source manifest hash mismatch')
+    return hashlib.sha256(raw).hexdigest()
+
 def bootstrap():
+    verify_source_inputs()
     require(os.environ.get('GITHUB_REPOSITORY')=='byteKayze/MontoGram','Wrong CI repository')
     setup=ROOT/'setup';tools=setup/'toolchains';tools.mkdir(parents=True,exist_ok=True)
     archive=tools/'gradle-8.13-bin.zip'
@@ -82,6 +97,7 @@ def compiler_profile():
     print(json.dumps(profile))
 
 def metadata():
+    source_manifest_digest=verify_source_inputs()
     require(os.environ.get('MONTOGRAM_GRADLE_OUTCOME')=='success','Gradle build success required')
     dependencies=json.loads((ROOT/'build/montogram-runtime-dependencies.json').read_text())
     require(dependencies=={'afatStandaloneRuntimeClasspath':['33.7.2-android'],'afatStandaloneCompileClasspath':['33.7.2-android'],'standaloneRuntimeClasspath':['33.7.2-android'],'standaloneCompileClasspath':['33.7.2-android']},'Fixed production dependency proof required')
@@ -95,7 +111,7 @@ def metadata():
     require(match is not None,'CI signer fingerprint unavailable')
     run([tools/'zipalign','-c','-P','16','4',apk])
     badging=run([tools/'aapt2','dump','badging',apk])
-    require("name='app.montogram.android' versionCode='20058'" in badging and 'application-debuggable' not in badging,'Unexpected APK identity/debug state')
+    require("name='app.montogram.android' versionCode='20068'" in badging and 'application-debuggable' not in badging,'Unexpected APK identity/debug state')
     abis=set()
     with zipfile.ZipFile(apk) as source:
         require(source.testzip() is None,'Corrupt CI APK')
@@ -105,7 +121,7 @@ def metadata():
     output=ROOT/'ci-output';output.mkdir();target=output/'montogram-ci-ephemeral.apk';shutil.copyfile(apk,target)
     value={'signing_state':'EPHEMERAL_CI_NOT_RELEASE_SIGNED','certificate_sha256':match.group(1),'apk_sha256':sha(target),
            'bytes':target.stat().st_size,'repository':'byteKayze/MontoGram','commit':commit,'run_id':os.environ['GITHUB_RUN_ID'],
-           'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'version_code':20058,'abis':sorted(abis),'gradle':'8.13',
+           'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'version_code':20068,'source_manifest_sha256':source_manifest_digest,'abis':sorted(abis),'gradle':'8.13',
            'java_version':re.search(r'JAVA_VERSION="([^"]+)"',(Path(os.environ['JAVA_HOME'])/'release').read_text()).group(1),
            'runtime_android_tested':False,'owner_signing_key_uploaded':False,'native_compile_jobs':int(os.environ.get('MONTOGRAM_NATIVE_JOBS','1')),'runtime_dependency_versions':dependencies}
     (output/'ci-metadata.json').write_text(json.dumps(value,indent=2)+'\n')

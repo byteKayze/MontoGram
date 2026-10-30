@@ -175,4 +175,58 @@
     <string name="MontogramDuplicateInfo">Enter your own text, up to 8192 UTF-16 units. Preview removes repeated nonempty lines, keeping the first copy and its separator. Empty lines stay; spaces and case matter. CRLF, CR, LF, NEL, LS and PS delimit lines. Text is not sent or saved. Copying is explicit; leaving or losing dialog focus clears the preview.</string>
     <string name="MontogramDuplicateSummary">Exact repeated lines removed: %1$d. Copy takes only the preview text, without this report. Kept rows retain their separators; a final separator may remain.</string>
     <string name="MontogramDuplicateRows">Original line numbers (starting at 1):</string>
+
+    <!-- Montogram manual workbench -->
+    <string name="MontogramSplitPreview">Text split preview</string>
+    <string name="MontogramSplitInfo">Plain text only. The Telegram limit is measured in UTF-16 units. Select a part to preview and copy it; nothing is sent. Joining parts preserves the original.</string>
+    <string name="MontogramSplitPart">Part %1$d of %2$d · %3$d UTF-16</string>
+    <string name="MontogramCompareTexts">Compare two texts</string>
+    <string name="MontogramCompareBefore">First text</string>
+    <string name="MontogramCompareAfter">Second text</string>
+    <string name="MontogramCompareInfo">Shows one changed region between a common prefix and suffix, not a minimal edit script. Only manually entered text is inspected.</string>
+    <string name="MontogramCompareResult">Common prefix: %1$d code points\nCommon suffix: %2$d code points\n\nRemoved:\n%3$s\n\nInserted:\n%4$s</string>
+    <string name="MontogramUrlStructure">Inspect URL structure</string>
+    <string name="MontogramUrlStructureInfo">HTTP(S) structure only, not a safety verdict. No network requests. User information, query values and fragments are hidden. The path and safe-form parameter names are shown and copied only on request; they may contain private information.</string>
+    <string name="MontogramUrlStructureResult">\nScheme: %1$s\nHost: %2$s\nPort: %3$s\nPath: %4$s\nParameters: %5$d</string>
+    <string name="MontogramMixedScripts">Inspect mixed alphabets</string>
+    <string name="MontogramMixedScriptsInfo">Advisory: finite Latin/Cyrillic/Greek ranges in letter and digit runs. Not a homoglyph detector or security verdict. Positions are Unicode code points.</string>
+    <string name="MontogramMixedScriptsRow">\nPositions %1$d–%2$d: %3$s</string>
+    <string name="MontogramSupportReport">Copy build report</string>
+    <string name="MontogramSupportReportInfo">Version, Android API and supported ABIs only; no account data, logs, tokens or paths.</string>
+
+    <!-- Montogram local-data tools -->
+    <string name="MontogramLocalData">Local data</string>
+    <string name="MontogramLocalDataInfo">Record counts and model-serialization bytes captured on refresh. Not RAM, disk or encrypted-file usage. No message contents are read.</string>
+    <string name="MontogramLocalDataStats">%1$d records · %2$d model bytes</string>
+    <string name="MontogramLocalDataUnavailable">Result not confirmed or data unavailable. Refresh before retrying.</string>
+    <string name="MontogramDataBusy">The document provider is busy or timed out. No extra worker will be started.</string>
+    <string name="MontogramDataRefresh">Refresh counts</string>
+    <string name="MontogramExportNotes">Export own notes</string>
+    <string name="MontogramExportBookmarkLabels">Export bookmark labels and references</string>
+    <string name="MontogramExportTemplates">Export reply templates</string>
+    <string name="MontogramImportTemplates">Import reply templates with preview</string>
+    <string name="MontogramChooseDocument">Choose document</string>
+    <string name="MontogramExportNow">Export current records</string>
+    <string name="MontogramExportDone">Export completed.</string>
+    <string name="MontogramExportNotesDisclosure">%1$d own notes: note text and dialog identifiers will be given to the document provider you select. No account identifier or encrypted-store metadata is included.</string>
+    <string name="MontogramExportBookmarksDisclosure">%1$d bookmarks: dialog/message identifiers, your labels and folder names will be given to the document provider you select. No message bodies or account identifier is included.</string>
+    <string name="MontogramExportTemplatesDisclosure">%1$d templates: your labels and reply text will be given to the selected document provider. Source local IDs, account data and encrypted-store metadata are excluded.</string>
+    <string name="MontogramFinalExportInfo">Confirm the current snapshot after returning from the picker. A cancelled or failed provider may leave an empty or partial document. App records are not removed.</string>
+    <string name="MontogramImportPreview">Templates: %1$d → %2$d. New: %3$d. Exact label/text duplicates are ignored; existing records are kept. Nothing is sent. Imported labels:</string>
+    <string name="MontogramMergeTemplates">Apply merge</string>
+    <string name="MontogramBookmarkFolders">Bookmark folders</string>
+    <string name="MontogramBookmarkFoldersInfo">One folder per bookmark, up to32 NFC names of32 UTF-16 units. Move a bookmark to create a folder; empty folders disappear. Moving to an empty name removes the folder assignment. Older alpha versions cannot read stored folder data: unfile all bookmarks before downgrading.</string>
+    <string name="MontogramFolderActions">Folder actions</string>
+    <string name="MontogramAllFolders">All bookmarks</string>
+    <string name="MontogramUnfiled">Unfiled</string>
+    <string name="MontogramFolderName">Folder name, empty to unfile</string>
+    <string name="MontogramMoveToFolder">Move to folder</string>
+    <string name="MontogramRenameFolder">Rename folder</string>
+    <string name="MontogramDissolveFolder">Dissolve folder</string>
+    <string name="MontogramDissolveFolderInfo">Move %1$d bookmarks to Unfiled? Bookmarks, labels and references are preserved.</string>
+    <string name="MontogramSelectVisibleNotes">Select visible notes</string>
+    <string name="MontogramClearSelection">Exit selection</string>
+    <string name="MontogramDeleteSelectedCount">Delete selected (%1$d)</string>
+    <string name="MontogramDeleteSelectedCountTitle">Delete selected local notes</string>
+    <string name="MontogramDeleteSelectedInfo">Delete %1$d selected local notes of the current account in one operation? Chats and messages are unchanged. Dialog identifiers:</string>
 </resources>

@@ -40,7 +40,7 @@ public final class MontogramSettings extends UniversalFragment {
     public static final int LIGHT = 1, DARK = 2, THEMES = 3, PERFORMANCE = 4, DATA = 5, STOCK_MODE = 6, MATERIAL_MODE = 7, MESSAGE_DETAILS = 8, BACKUP_EXPORT = 9, BACKUP_IMPORT = 10;
     private static final int SERVICES_INFO = 11, RESET_SETTINGS = 12, AVATAR_CIRCLE = 13, AVATAR_SQUIRCLE = 14, AVATAR_SQUARE = 15, HIDE_STORIES = 16, PROFILE_IDS = 17, DRAFT_COUNTER = 18, MESSAGE_SECONDS = 19, LINK_CLEANER = 20, CONFIRM_CALLS = 21, CONFIRM_STICKERS = 22, DENSITY_NATIVE = 23, DENSITY_COMPACT = 24, DENSITY_COMFORTABLE = 25, HAPTICS_NATIVE = 26, HAPTICS_OFF = 27, HAPTICS_REDUCED = 28, MENU_NATIVE = 29, MENU_FIRST = 30, MENU_LAST = 31, MENU_HIDE_TRANSLATE = 32, MENU_HIDE_SHARE = 33, MENU_HIDE_SAVE = 34, VOICE_PREVIEW = 35, HIDE_TYPING = 36, QUICK_REPLIES = 37, BOOKMARKS = 38, NOTES = 39, SEARCH_RESULT_OFFSET = 3000;
     private static final int EXPORT_DOCUMENT = 7401, IMPORT_DOCUMENT = 7402;
-    private static final int TEXT_TOOLS = 40;
+    private static final int TEXT_TOOLS = 40, SUPPORT_REPORT = 43, LOCAL_DATA = 44;
     private static final int MOTION_STANDARD = 41, MOTION_OFF = 42;
     private int linkCleanerGeneration;
     private final Category category;
@@ -344,6 +344,8 @@ public final class MontogramSettings extends UniversalFragment {
         rows.add(descriptor(PERFORMANCE, Category.PERFORMANCE, R.string.SettingsPowerSaving, R.string.MontogramNativeControlsInfo, "performance battery animation power saving"));
         rows.add(descriptor(DATA, Category.PERFORMANCE, R.string.SettingsData, R.string.MontogramNativeControlsInfo, "data traffic network"));
         rows.add(descriptor(SERVICES_INFO, Category.ABOUT, R.string.MontogramServices, R.string.MontogramServicesInfo, "google firebase services notifications"));
+        rows.add(descriptor(SUPPORT_REPORT,Category.ABOUT,R.string.MontogramSupportReport,R.string.MontogramSupportReportInfo,"support build version abi report отчёт поддержка сборка"));
+        rows.add(descriptor(LOCAL_DATA,Category.BACKUP,R.string.MontogramLocalData,R.string.MontogramLocalDataInfo,"local data export import templates notes bookmarks данные экспорт импорт заметки закладки"));
         return new MontogramSettingsIndex(rows);
     }
 
@@ -463,6 +465,12 @@ public final class MontogramSettings extends UniversalFragment {
             case TEXT_TOOLS: presentFragment(new MontogramTextToolsActivity(currentAccount)); break;
             case BOOKMARKS: presentFragment(new MontogramBookmarksActivity(currentAccount)); break;
             case QUICK_REPLIES: presentFragment(new MontogramQuickRepliesActivity(currentAccount)); break;
+            case LOCAL_DATA: presentFragment(new MontogramLocalDataActivity(currentAccount));break;
+            case SUPPORT_REPORT:
+                String report=org.telegram.messenger.MontogramTextWorkbench.supportReport(org.telegram.messenger.BuildVars.BUILD_VERSION_STRING,android.os.Build.VERSION.SDK_INT,android.os.Build.SUPPORTED_ABIS);
+                showDialog(new AlertDialog.Builder(getParentActivity(),getResourceProvider()).setTitle(text(R.string.MontogramSupportReport))
+                        .setMessage(report).setNegativeButton(text(R.string.Cancel),null)
+                        .setPositiveButton(text(R.string.Copy),(dialog,button)->AndroidUtilities.addToClipboard(report)).create());break;
             case LINK_CLEANER: showLinkCleaner(); break;
             case BACKUP_EXPORT: chooseBackupDocument(true); break;
             case BACKUP_IMPORT: chooseBackupDocument(false); break;

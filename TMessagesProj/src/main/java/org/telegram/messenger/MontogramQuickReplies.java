@@ -45,6 +45,14 @@ public final class MontogramQuickReplies {
     public static boolean current(Snapshot value) { ui(); return value != null && MontogramQuickReplyAccess.isCurrent(value.owner); }
     public static Mode mode(Snapshot value) { return current(value) ? value.mode : null; }
     public static List<MontogramQuickReplyData.Reply> entries(Snapshot value) { return current(value) ? MontogramQuickReplyAccess.replies(value.owner) : null; }
+    public static byte[] exportPortable(Snapshot value){
+        ui();if(!current(value))throw new IllegalStateException("Stale local owner");
+        return MontogramLocalExport.replies(value.owner.data.replies);
+    }
+    public static int serializedBytes(Snapshot value) throws java.io.IOException {
+        ui();if(!current(value))throw new IllegalStateException("Stale local owner");
+        byte[] bytes=value.owner.data.encode();try{return bytes.length;}finally{java.util.Arrays.fill(bytes,(byte)0);}
+    }
     public static void revoke(Snapshot value) { ui(); if (value != null) MontogramQuickReplyAccess.revoke(value.owner); }
 
     private static final class Result {
@@ -115,6 +123,28 @@ public final class MontogramQuickReplies {
         final MontogramQuickReplyData target;
         try { target = remove ? previous.owner.data.delete(id) : id == 0 ? previous.owner.data.add(label, text) : previous.owner.data.edit(id, label, text); }
         catch (IllegalArgumentException invalid) { callback.complete(Status.INVALID, null); return null; }
+        return commit(previous,target,callback);
+    }
+    public static long revision(Snapshot value){ui();return current(value)?value.owner.data.revision:-1;}
+    public static int previewMergeCount(Snapshot value,MontogramQuickReplyData incoming){ui();if(!current(value))throw new IllegalStateException("Stale local owner");return value.owner.data.mergeImported(incoming).replies.size();}
+    public static Request mergeImported(Snapshot previous,MontogramQuickReplyData incoming,String expectedDigest,long expectedRevision,Callback callback){
+        ui();if(!current(previous)){callback.complete(Status.STALE,null);return null;}
+        if(previous.owner.data.revision!=expectedRevision){callback.complete(Status.STALE,null);return null;}
+        if(BUSY[previous.owner.account]){callback.complete(Status.BUSY,null);return null;}
+        final MontogramQuickReplyData target;
+        try{
+            byte[] canonical=incoming.encode();
+            try{if(!java.util.Arrays.equals(java.security.MessageDigest.getInstance("SHA-256").digest(canonical),hexDigest(expectedDigest)))throw new IllegalArgumentException("Import changed");}
+            finally{java.util.Arrays.fill(canonical,(byte)0);}
+            target=previous.owner.data.mergeImported(incoming);
+        }catch(Exception invalid){callback.complete(Status.INVALID,null);return null;}
+        return commit(previous,target,callback);
+    }
+    private static byte[] hexDigest(String value){
+        if(value==null||!value.matches("[a-f0-9]{64}"))throw new IllegalArgumentException("Invalid import digest");
+        byte[] bytes=new byte[32];for(int i=0;i<32;i++)bytes[i]=(byte)Integer.parseInt(value.substring(i*2,i*2+2),16);return bytes;
+    }
+    private static Request commit(Snapshot previous,MontogramQuickReplyData target,Callback callback){
         if (target == previous.owner.data) { callback.complete(Status.OK, previous); return null; }
         if (previous.mode == Mode.PROCESS_MEMORY) {
             MontogramQuickReplyMemory.Snapshot ready = MontogramQuickReplyMemory.global().replace(previous.owner, target);
