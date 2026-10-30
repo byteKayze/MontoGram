@@ -229,4 +229,15 @@
     <string name="MontogramDeleteSelectedCount">Удалить выбранные (%1$d)</string>
     <string name="MontogramDeleteSelectedCountTitle">Удаление выбранных локальных заметок</string>
     <string name="MontogramDeleteSelectedInfo">Удалить %1$d выбранных локальных заметок текущего аккаунта одной операцией? Чаты и сообщения не меняются. Идентификаторы чатов:</string>
+
+    <string name="MontogramReader">Читать выбранный текст</string>
+    <string name="MontogramReaderInfo">Режим чтения одного обычного доступного сообщения с локальным поиском. Защищённые, секретные, исчезающие сообщения, группы медиа и спойлеры исключены. Текст удаляется из окна при уходе или потере фокуса.</string>
+    <string name="MontogramReaderPrevious">Предыдущее</string>
+    <string name="MontogramReaderNext">Следующее</string>
+    <string name="MontogramReaderMatches">%1$d из %2$d</string>
+    <string name="MontogramReaderNoMatches">Нет совпадений</string>
+    <string name="MontogramTemporaryCopy">Копия до 1 минуты</string>
+    <string name="MontogramTemporaryCopyInfo">Временная копия: попытка очистки через минуту или при уходе из инструмента, только если буфер не изменён и Android разрешает доступ. После смены приложения и в истории буфера клавиатуры очистка не гарантируется.</string>
+    <string name="MontogramTemporaryCopyFailed">Не удалось скопировать.</string>
+    <string name="MontogramReaderClosed">Просмотр очищен. Для чтения откройте сообщение снова.</string>
 </resources>

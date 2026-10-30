@@ -10,7 +10,7 @@ public final class MontogramPreferences {
     private MontogramPreferences() {}
     public enum Key {
         MATERIAL3("material3", false, true), MESSAGE_DETAILS("message_details", false, false),
-        MOTION("motion", 0, false),
+        MOTION("motion", 0, false), READER("reader", false, false),
         AVATAR_SHAPE("avatar_shape", 0, true), HIDE_STORIES("hide_stories", false, true),
         PROFILE_IDS("profile_ids", false, true), DRAFT_COUNTER("draft_counter", false, true), MESSAGE_SECONDS("message_seconds", false, true), CONFIRM_CALLS("confirm_calls", false, false), CONFIRM_STICKERS("confirm_stickers", false, false), DIALOG_DENSITY("dialog_density", 0, true), HAPTICS("haptics", 0, false), MENU_ORDER("menu_order", 0, false),
         MENU_HIDE_TRANSLATE("menu_hide_translate", false, false), MENU_HIDE_SHARE("menu_hide_share", false, false), MENU_HIDE_SAVE("menu_hide_save", false, false), VOICE_PREVIEW("voice_preview", false, false), HIDE_TYPING("hide_typing", false, false);

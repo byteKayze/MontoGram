@@ -40,7 +40,7 @@ public final class MontogramSettings extends UniversalFragment {
     public static final int LIGHT = 1, DARK = 2, THEMES = 3, PERFORMANCE = 4, DATA = 5, STOCK_MODE = 6, MATERIAL_MODE = 7, MESSAGE_DETAILS = 8, BACKUP_EXPORT = 9, BACKUP_IMPORT = 10;
     private static final int SERVICES_INFO = 11, RESET_SETTINGS = 12, AVATAR_CIRCLE = 13, AVATAR_SQUIRCLE = 14, AVATAR_SQUARE = 15, HIDE_STORIES = 16, PROFILE_IDS = 17, DRAFT_COUNTER = 18, MESSAGE_SECONDS = 19, LINK_CLEANER = 20, CONFIRM_CALLS = 21, CONFIRM_STICKERS = 22, DENSITY_NATIVE = 23, DENSITY_COMPACT = 24, DENSITY_COMFORTABLE = 25, HAPTICS_NATIVE = 26, HAPTICS_OFF = 27, HAPTICS_REDUCED = 28, MENU_NATIVE = 29, MENU_FIRST = 30, MENU_LAST = 31, MENU_HIDE_TRANSLATE = 32, MENU_HIDE_SHARE = 33, MENU_HIDE_SAVE = 34, VOICE_PREVIEW = 35, HIDE_TYPING = 36, QUICK_REPLIES = 37, BOOKMARKS = 38, NOTES = 39, SEARCH_RESULT_OFFSET = 3000;
     private static final int EXPORT_DOCUMENT = 7401, IMPORT_DOCUMENT = 7402;
-    private static final int TEXT_TOOLS = 40, SUPPORT_REPORT = 43, LOCAL_DATA = 44;
+    private static final int TEXT_TOOLS = 40, SUPPORT_REPORT = 43, LOCAL_DATA = 44, READER = 45;
     private static final int MOTION_STANDARD = 41, MOTION_OFF = 42;
     private int linkCleanerGeneration;
     private final Category category;
@@ -221,6 +221,7 @@ public final class MontogramSettings extends UniversalFragment {
         switch(key){
             case MATERIAL3:return text(R.string.MontogramStyleMaterial);
             case MESSAGE_DETAILS:return text(R.string.MontogramMessageDetails);
+            case READER:return text(R.string.MontogramReader);
             case VOICE_PREVIEW:return text(R.string.MontogramVoicePreview);
             case HIDE_TYPING:return text(R.string.MontogramHideTyping);
             case MENU_ORDER:return text(R.string.MontogramMenuOrder);
@@ -322,6 +323,7 @@ public final class MontogramSettings extends UniversalFragment {
                 R.string.MontogramTextToolsInfo, "unicode invisible text statistics keyboard раскладка статистика невидимые символы"));
         rows.add(descriptor(CONFIRM_CALLS,Category.CHAT_TOOLS,R.string.MontogramConfirmCalls,R.string.MontogramConfirmCallsInfo,"confirm personal outgoing voice video calls подтверждение звонок вызов"));
         rows.add(descriptor(CONFIRM_STICKERS,Category.CHAT_TOOLS,R.string.MontogramConfirmStickers,R.string.MontogramConfirmStickersInfo,"confirm chat sticker panel preview suggestions greetings подтверждение стикер панель подсказка приветствие"));
+        rows.add(descriptor(READER,Category.CHAT_TOOLS,R.string.MontogramReader,R.string.MontogramReaderInfo,"reader local text search reading чтение текст поиск"));
         rows.add(descriptor(VOICE_PREVIEW,Category.CHAT_TOOLS,R.string.MontogramVoicePreview,R.string.MontogramVoicePreviewInfo,"voice audio recording preview confirm голосовые предпросмотр прослушивание"));
         rows.add(descriptor(NOTES,Category.CHAT_TOOLS,R.string.MontogramNotes,R.string.MontogramNotesMemoryInfo,"local chat notes заметки чат записи"));
         rows.add(descriptor(BOOKMARKS,Category.CHAT_TOOLS,R.string.MontogramBookmarks,R.string.MontogramBookmarksMemoryInfo,"local bookmarks saved references закладки сообщения ссылки"));
@@ -385,6 +387,8 @@ public final class MontogramSettings extends UniversalFragment {
                     entry.id == MATERIAL_MODE ? MontogramConfig.isMaterial3() : !MontogramConfig.isMaterial3()));
             } else if(entry.id>=MOTION_STANDARD&&entry.id<=MOTION_OFF){
                 items.add(UItem.asRadio(entry.id,entry.title).setChecked(MontogramConfig.motionMode()==entry.id-MOTION_STANDARD));
+            } else if(entry.id==READER){
+                items.add(UItem.asCheck(entry.id,entry.title).setChecked(MontogramConfig.readerEnabled()));
             } else if(entry.id==VOICE_PREVIEW){
                 items.add(UItem.asCheck(entry.id,entry.title).setChecked(MontogramConfig.voicePreview()));
             } else if(entry.id==HIDE_TYPING){
@@ -442,6 +446,7 @@ public final class MontogramSettings extends UniversalFragment {
                 confirmChange(new MontogramSettingsChange(MontogramConfig.snapshot(),MontogramConfig.revision(),State.defaults()),
                     ++changeGeneration, R.string.MontogramResetSettings);
                 break;
+            case READER:changeSetting(Key.READER,!MontogramConfig.readerEnabled());break;
             case VOICE_PREVIEW:changeSetting(Key.VOICE_PREVIEW,!MontogramConfig.voicePreview());break;
             case HIDE_TYPING:changeSetting(Key.HIDE_TYPING,!MontogramConfig.hideTyping());break;
             case MENU_NATIVE:case MENU_FIRST:case MENU_LAST:

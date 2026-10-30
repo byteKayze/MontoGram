@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "tag": "v0.2.0-alpha.7",
+  "version_code": 20078,
+  "files": [
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramTextWorkbench.java",
+      "sha256": "65fa20d4d69e9de33627f837a02189f23817abe97c43326b3e2142a2166dfe8c"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramSafIO.java",
+      "sha256": "ceca705a5db32736e921bd6785508d9ffffc29d20720df543591ba4b5e7a8d63"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramBackupIO.java",
+      "sha256": "3c3918018291f3aa14a9e9202c7ac838740e7cd3fec0dc2b8730de793ef21acc"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramBookmarkData.java",
+      "sha256": "37e4b39b290dc74ff14d353b3b8cf37db2803558f99a9ea147392d97c2f48253"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramNoteData.java",
+      "sha256": "f26f5e2b65a3a46de7224b84b2af6f4d04d3fc2265d2e37446a9d2c73f62b018"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramQuickReplyData.java",
+      "sha256": "7029d4beec93c1b293be8791ba5941e4ce88c7839baf642a915a962cb43fe044"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramLocalExport.java",
+      "sha256": "ed54e529de7e442cc839835490ecad37628096fad99f197370cd4f8e961a58a4"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramNotes.java",
+      "sha256": "bbedf1066b349b805b48e26f3fba4660f4d82d652c1d8b20d3becdf0dc9e794a"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramBookmarks.java",
+      "sha256": "df7fa599642f9d11642099bdb90ebc45a2e548c0d9ad3d9224f9c39d62e9b324"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramQuickReplies.java",
+      "sha256": "03558c56e4f2deaf6dd9b16cb92eee3a752b11eeec24242ef349ef65141c4f34"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/ui/MontogramTextToolsActivity.java",
+      "sha256": "64a28f38de6b905db77626d7c5dd263758937370e3831cd62c0260edcb5d97b7"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/ui/MontogramLocalDataActivity.java",
+      "sha256": "abe62fd888ebe6a050e3d03db65db2744dc21dab89f9b31c875ddf54e5617b3e"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/ui/MontogramNotesActivity.java",
+      "sha256": "26c0659ea55765febf86eac1162d5609d84d1ea4e4cc38e3b2f3d89adafb6d93"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/ui/MontogramBookmarksActivity.java",
+      "sha256": "11cf5b8666e565469330d36b5b42ca9f125f9784c4b5a289667b37038f15c2fc"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/ui/MontogramSettings.java",
+      "sha256": "1c056e8b55db415efde532d40b183ff611a3b5f01c21987d9c3c25703bd7882b"
+    },
+    {
+      "path": "TMessagesProj/src/main/res/values/montogram.xml",
+      "sha256": "d2df1c838a8814d050e4a8c2e4954646c581fc40e23864829953537103d5f4ed"
+    },
+    {
+      "path": "TMessagesProj/src/main/res/values-ru/montogram.xml",
+      "sha256": "a7d7dcfa0c9083243ed1699a75b56051716a3fb2afe66396aac038e5128a76f2"
+    },
+    {
+      "path": "gradle.properties",
+      "sha256": "4493740b7e99dce0793ec39e5369d470a76b6aff2e00f018ba1c84d22726442a"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramReaderSearch.java",
+      "sha256": "2524748e0a45c3bdf7faf450d94fc474a5dff495e47559325a4316edc6fc0388"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramTemporaryClipboard.java",
+      "sha256": "d30fe04a911e52ebf1a58f56a3438d5f8e19cfe00030909ce384b05a34af679f"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/ui/MontogramReaderActivity.java",
+      "sha256": "0046f21877dadd4e549068857a61f9d2fdd7734c1e01986faf5da34273488523"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramConfig.java",
+      "sha256": "ec1f43801cd082cc9cd987b5396cb0a884936c7352b4d8e8a02e574550ea05ce"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/messenger/MontogramPreferences.java",
+      "sha256": "99272f03fed81574d93f0d37194c731991e2deb9d2ccc8ae7396261173fd5785"
+    },
+    {
+      "path": "TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java",
+      "sha256": "18618269b2e8505efff25ea62ed6e7f8833fe0b68330b65b0cac595eed9680dc"
+    }
+  ]
+}

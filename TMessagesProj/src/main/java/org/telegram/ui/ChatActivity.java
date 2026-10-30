@@ -1266,6 +1266,7 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_SEND_MONEY = 117;
     private static final int OPTION_MONTOGRAM_MESSAGE_INFO = 10001;
     private static final int OPTION_MONTOGRAM_BOOKMARK = 10002;
+    private static final int OPTION_MONTOGRAM_READER = 10004;
     private static final int chat_menu_montogram_notes = 10003;
 
     private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
@@ -33535,6 +33536,24 @@ public class ChatActivity extends BaseFragment implements
         }));
     }
 
+    private boolean canOpenMontogramReader(MessageObject message){
+        if(!org.telegram.messenger.MontogramConfig.readerEnabled()||!canAddMontogramBookmark(message)||messagesDict[0].get(message.getId())!=message||message.messageOwner.message==null||message.messageOwner.message.isEmpty())return false;
+        try{org.telegram.messenger.MontogramReaderSearch.validate(message.messageOwner.message,org.telegram.messenger.MontogramReaderSearch.MAX_TEXT);return true;}catch(IllegalArgumentException invalid){return false;}
+    }
+    private void openMontogramReader(MessageObject message){
+        if(!canOpenMontogramReader(message))return;
+        final int account=currentAccount,id=message.getId();final long peer=getDialogId(),self=UserConfig.getInstance(account).getClientUserId();final String original=message.messageOwner.message;
+        final java.lang.ref.WeakReference<ChatActivity> owner=new java.lang.ref.WeakReference<>(this);
+        final java.lang.ref.WeakReference<MessageObject> target=new java.lang.ref.WeakReference<>(message);
+        presentFragment(new MontogramReaderActivity(account,self,original,()->{
+            ChatActivity chat=owner.get();MessageObject actual=target.get();
+            return chat!=null&&!chat.isFinishing()&&chat.getParentActivity()!=null&&chat.currentAccount==account&&chat.getDialogId()==peer&&chat.chatMode==0
+                &&chat.messagesDict[0].get(id)==actual&&actual!=null&&actual.messageOwner!=null&&original.equals(actual.messageOwner.message)
+                &&org.telegram.messenger.MontogramConfig.readerEnabled()&&account==UserConfig.selectedAccount&&UserConfig.getInstance(account).isClientActivated()&&UserConfig.getInstance(account).getClientUserId()==self
+                &&!SharedConfig.appLocked&&!SharedConfig.isWaitingForPasscodeEnter&&org.telegram.messenger.MontogramBookmarkEligibility.permits(actual,account,peer,id,chat.userInfo,chat.currentChat);
+        }));
+    }
+
     private boolean canShowMontogramMessageDetails(MessageObject message) {
         return org.telegram.messenger.MontogramConfig.showMessageDetails() && message != null &&
             message == selectedObject && selectedObjectGroup == null && message.messageOwner != null &&
@@ -33554,6 +33573,7 @@ public class ChatActivity extends BaseFragment implements
         }
         boolean preserveDim = false;
         switch (option) {
+            case OPTION_MONTOGRAM_READER:openMontogramReader(selectedObject);break;
             case OPTION_MONTOGRAM_BOOKMARK: addMontogramBookmark(selectedObject); break;
             case OPTION_MONTOGRAM_MESSAGE_INFO: {
                 if (!canShowMontogramMessageDetails(selectedObject)) return;
@@ -46666,6 +46686,9 @@ public class ChatActivity extends BaseFragment implements
             items.add(getString(R.string.MontogramBookmarksAdd));options.add(OPTION_MONTOGRAM_BOOKMARK);icons.add(R.drawable.msg_info);
         }
 
+        if(primaryMessage==selectedObject&&canOpenMontogramReader(selectedObject)){
+            items.add(getString(R.string.MontogramReader));options.add(OPTION_MONTOGRAM_READER);icons.add(R.drawable.msg_info);
+        }
         if (primaryMessage == selectedObject && canShowMontogramMessageDetails(selectedObject)) {
             items.add(getString(R.string.MontogramMessageDetails));
             options.add(OPTION_MONTOGRAM_MESSAGE_INFO);
@@ -46698,7 +46721,7 @@ public class ChatActivity extends BaseFragment implements
                 case OPTION_SHARE: categories[i] = 2; break;
                 case OPTION_SAVE_TO_GALLERY: case OPTION_SAVE_TO_GALLERY2:
                 case OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC: categories[i] = 3; break;
-                case OPTION_STATISTICS: case OPTION_MONTOGRAM_BOOKMARK: case OPTION_MONTOGRAM_MESSAGE_INFO: categories[i] = 4; break;
+                case OPTION_STATISTICS: case OPTION_MONTOGRAM_READER: case OPTION_MONTOGRAM_BOOKMARK: case OPTION_MONTOGRAM_MESSAGE_INFO: categories[i] = 4; break;
                 default: categories[i] = 0;
             }
         }

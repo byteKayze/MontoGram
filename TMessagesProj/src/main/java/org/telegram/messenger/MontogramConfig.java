@@ -49,6 +49,7 @@ public final class MontogramConfig {
         cached=target;revision++;return true;
     }
     public static boolean isMaterial3(){return snapshot().bool(Key.MATERIAL3);}
+    public static boolean readerEnabled(){return snapshot().bool(Key.READER);}
     public static boolean showMessageDetails(){return snapshot().bool(Key.MESSAGE_DETAILS);}
     public static int hapticsMode(){return snapshot().integer(Key.HAPTICS);}
     public static int motionMode(){return snapshot().integer(Key.MOTION);}

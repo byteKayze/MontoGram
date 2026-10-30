@@ -229,4 +229,15 @@
     <string name="MontogramDeleteSelectedCount">Delete selected (%1$d)</string>
     <string name="MontogramDeleteSelectedCountTitle">Delete selected local notes</string>
     <string name="MontogramDeleteSelectedInfo">Delete %1$d selected local notes of the current account in one operation? Chats and messages are unchanged. Dialog identifiers:</string>
+
+    <string name="MontogramReader">Read selected text</string>
+    <string name="MontogramReaderInfo">Opt-in plain-text reader for one accessible ordinary message, with local search. Protected, secret, expiring, grouped and spoiled messages are excluded. Text is discarded when leaving or losing focus.</string>
+    <string name="MontogramReaderPrevious">Previous match</string>
+    <string name="MontogramReaderNext">Next match</string>
+    <string name="MontogramReaderMatches">%1$d of %2$d</string>
+    <string name="MontogramReaderNoMatches">No matches</string>
+    <string name="MontogramTemporaryCopy">Copy for up to 1 min</string>
+    <string name="MontogramTemporaryCopyInfo">Temporary copy: best-effort clearing after 1 minute or when leaving this tool, only while the clip is unchanged and Android allows access. Clearing after switching apps and removal from keyboard clipboard history are not guaranteed.</string>
+    <string name="MontogramTemporaryCopyFailed">Unable to copy.</string>
+    <string name="MontogramReaderClosed">Preview cleared. Open the message again to read it.</string>
 </resources>
